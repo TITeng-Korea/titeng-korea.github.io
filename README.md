@@ -57,6 +57,6 @@ git push origin main
 
 ## 📄 라이선스 및 문의 사항
 * **라이선스**: 본 프로젝트 소스코드는 ㈜티아이티이엔지의 자산이며 관련 오픈소스 라이선스 정책을 따릅니다.
-* **기술지원**: [support@titeng.co.kr](mailto:support@titeng.co.kr)
-* **대표전화**: 032-832-4700
+* **기술지원**: [knchoi@titeng.co.kr](mailto:knchoi@titeng.co.kr)
+* **대표전화**: 02-3431-2370
 * **공식 홈페이지**: [www.titeng.co.kr](http://www.titeng.co.kr/main/main.php)
