@@ -1,7 +1,7 @@
 // 기술 포스트 데이터 (index.html 과 posts/article.html 에서 공동 참조)
 const techArticles = [
     {
-        id: 1,
+        id: 5,
         title: "tPay NFC Android/iOS SDK를 10분 만에 연동하여 승인 결제 처리하는 방법",
         category: "sw",
         categoryKo: "S/W & 결제 플랫폼",
@@ -126,7 +126,7 @@ tpayClient.enableNfcSensor(activity) { tagState ->
         `
     },
     {
-        id: 5,
+        id: 1,
         title: "TITeng 연구소의 Git 기반 협업 및 무결성 CI/CD 파이프라인 정착 과정",
         category: "culture",
         categoryKo: "엔지니어링 문화",
@@ -142,6 +142,179 @@ tpayClient.enableNfcSensor(activity) { tagState ->
 
             <h3>효과 및 미래 비전</h3>
             <p>이를 통해 실제 배포 이전에 일어날 수 있는 메모리 누수(OOM), 변수 오버플로우 등의 사소한 버그를 사전에 85% 이상 정적 분석 단계에서 스크리닝할 수 있게 되었습니다. 펌웨어 배포 역시 클라우드 저장소를 거쳐 파트너 개발자가 드라이버 다운로드 센터에서 실시간으로 받도록 파이프라인을 완전히 연동 통합하였습니다.</p>
+        `
+    },
+    {
+        id: 16,
+        title: "AI 시대의 Git 활용법 with VSCode",
+        category: "report",
+        categoryKo: "기술 리포트",
+        badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
+        author: "성현진 엔지니어 (개발 생산성)",
+        date: "2026.06.18",
+        readTime: "Git 실무 리포트",
+        summary: "AI가 만든 코드 변경을 Git diff, stage, commit, branch, PR 흐름으로 검토하고 설명하는 Git 실무 리포트입니다. VSCode Source Control 기준의 작업 루틴을 한 번에 정리했습니다.",
+        tags: ["Git", "VSCode", "AI", "Diff", "DevWorkflow"],
+        content: `
+            <h3>Git이 하는 일</h3>
+            <p>Git은 단순 백업 도구가 아니라 코드가 언제, 왜, 어떻게 바뀌었는지 기록하는 버전 관리 도구입니다. AI가 코드를 빠르게 바꾸는 환경에서는 결과물을 바로 믿기보다 변경 이력을 작게 나누고, diff를 읽고, 필요한 것만 반영하는 기준점 역할을 합니다.</p>
+
+            <h3>핵심 개념</h3>
+            <ul>
+                <li><strong>Repository</strong>: 프로젝트의 이력 전체를 저장하는 저장소입니다.</li>
+                <li><strong>Working Tree</strong>: 현재 편집 중인 실제 파일 상태입니다.</li>
+                <li><strong>Staging Area</strong>: 이번 커밋에 담을 변경을 고르는 임시 영역입니다.</li>
+                <li><strong>Commit</strong>: 선택된 변경을 설명 가능한 단위로 저장한 스냅샷입니다.</li>
+                <li><strong>Branch</strong>: 실험이나 기능 작업을 main과 분리하는 작업 공간입니다.</li>
+            </ul>
+
+            <h3>자주 보는 상태값</h3>
+            <ul>
+                <li><strong>M: Modified</strong>: Git이 추적 중인 파일이 수정된 상태입니다.</li>
+                <li><strong>U: Untracked</strong>: 새 파일이 생겼지만 아직 Git이 추적하지 않는 상태입니다.</li>
+                <li><strong>A: Added</strong>: 새 파일이 stage되어 커밋 후보에 올라간 상태입니다.</li>
+                <li><strong>D: Deleted</strong>: 추적 중이던 파일이 삭제된 상태입니다.</li>
+            </ul>
+
+            <h3>기본 작업 흐름</h3>
+            <ol>
+                <li>먼저 <code>git status</code>로 현재 작업 상태를 확인합니다.</li>
+                <li><code>git diff</code>로 실제로 어떤 줄이 바뀌었는지 읽습니다.</li>
+                <li><code>git add</code>로 이번 커밋에 담을 변경만 골라 stage합니다.</li>
+                <li><code>git commit</code>으로 의도가 드러나는 메시지를 남깁니다.</li>
+                <li>실험성 작업은 새 브랜치에서 진행하고, 협업 전에는 PR 설명으로 정리합니다.</li>
+            </ol>
+
+            <h3>기본 명령어 모음</h3>
+            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>git status
+git diff
+git add .
+git add path/to/file
+git commit -m "fix: 로그인 오류 메시지 수정"
+git log --oneline --decorate --graph
+git switch -c feature/login-error-message
+git branch
+git restore path/to/file
+git revert &lt;commit-hash&gt;</code></pre>
+
+            <h3>명령어를 언제 쓰는가</h3>
+            <ul>
+                <li><code>git status</code>: 지금 어떤 파일이 바뀌었는지 확인할 때 사용합니다.</li>
+                <li><code>git diff</code>: 추가된 코드보다 삭제된 코드까지 함께 읽어야 할 때 사용합니다.</li>
+                <li><code>git add</code>: 변경 전체가 아니라 이번 커밋에 담을 범위를 선택할 때 사용합니다.</li>
+                <li><code>git commit -m</code>: 변경 이유가 보이는 단위로 저장할 때 사용합니다.</li>
+                <li><code>git switch -c</code>: main을 건드리지 않고 기능이나 실험 브랜치를 만들 때 사용합니다.</li>
+                <li><code>git log --oneline</code>: 최근 커밋 흐름을 짧게 확인할 때 사용합니다.</li>
+                <li><code>git restore</code>: 아직 커밋하지 않은 파일 변경을 되돌릴 때 사용합니다.</li>
+                <li><code>git revert</code>: 이미 기록된 커밋을 취소하는 새 커밋을 만들 때 사용합니다.</li>
+            </ul>
+
+            <h3>VSCode에서 같이 보면 좋은 화면</h3>
+            <p>Source Control 패널은 파일 목록을 보고, diff 화면은 줄 단위 변경을 읽고, stage는 커밋 범위를 정하는 역할을 합니다. AI가 한 번에 많은 파일을 바꿨다면 VSCode에서 파일 목록과 diff를 먼저 확인한 뒤 명령어를 쓰는 편이 안전합니다.</p>
+
+            <h3>실무 체크리스트</h3>
+            <ul>
+                <li>AI에게 큰 요청을 하기 전에 작업 디렉터리를 깨끗하게 유지합니다.</li>
+                <li>커밋 전에는 새 파일과 삭제 파일을 더 엄격하게 확인합니다.</li>
+                <li>커밋 메시지는 <code>update</code>보다 어떤 문제를 왜 고쳤는지가 드러나야 합니다.</li>
+                <li>되돌릴 가능성이 있는 작업일수록 브랜치와 작은 커밋 단위가 중요합니다.</li>
+            </ul>
+
+            <a href="../topic2/topic2.html" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+        `
+    },
+    {
+        id: 17,
+        title: "AI 코딩 패러다임과 차세대 클라우드 개발 환경",
+        category: "report",
+        categoryKo: "기술 리포트",
+        badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
+        author: "성현진 엔지니어 (개발 생산성)",
+        date: "2026.06.18",
+        readTime: "클라우드 IDE 리포트",
+        summary: "AI 코딩 패러다임 전환, LLM의 문맥 처리 방식, 로컬 개발 환경의 구조적 한계, Antigravity IDE형 클라우드 개발 환경 아키텍처를 정리한 기술 리포트입니다.",
+        tags: ["AI Coding", "LLM", "Cloud IDE", "Antigravity", "WASM"],
+        content: `
+            <h3>리포트 개요</h3>
+            <p>이 리포트는 AI 코딩이 개발 인터페이스를 어떻게 바꾸고 있는지, 그리고 그 변화가 왜 클라우드 기반 개발 환경으로 이어지는지를 하나의 흐름으로 정리합니다. 검색과 복사·붙여넣기 중심의 작업 방식에서, IDE 안에서 AI와 대화하며 문맥을 유지하는 방식으로 이동하는 배경을 다룹니다.</p>
+
+            <h3>핵심 질문</h3>
+            <ul>
+                <li>AI 코딩은 왜 기존 개발 생산성 구조를 바꾸는가</li>
+                <li>LLM은 어떤 방식으로 코드를 예측하고 문맥을 소비하는가</li>
+                <li>로컬 개발 환경은 왜 점점 병목이 되는가</li>
+                <li>차세대 클라우드 IDE는 어떤 아키텍처를 가져야 하는가</li>
+            </ul>
+
+            <h3>주요 내용</h3>
+            <ul>
+                <li><strong>개발 패러다임 시프트</strong>: Stack Overflow 검색과 복붙 중심 흐름에서, IDE 내 인라인 대화와 즉시 패치 적용 흐름으로 전환됩니다.</li>
+                <li><strong>LLM과 Context Window</strong>: 모델은 코드를 이해한다기보다 확률적으로 예측하며, 어떤 문맥을 주느냐가 결과 품질을 좌우합니다.</li>
+                <li><strong>레거시 로컬 개발의 한계</strong>: 환경 파편화, 느린 빌드, 디바이스 성능 편차, 보안 리스크가 구조적으로 커집니다.</li>
+                <li><strong>Antigravity IDE 아키텍처</strong>: 원격 컨테이너, WASM 기반 클라이언트, 스냅샷 복구, 보안 VPC, 저지연 동기화가 결합된 형태를 설명합니다.</li>
+            </ul>
+
+            <h3>실무 관점 포인트</h3>
+            <ul>
+                <li>AI 코딩 도입은 단순 자동완성 추가가 아니라 개발 워크플로우 전체 재설계 문제입니다.</li>
+                <li>좋은 결과를 얻으려면 모델 성능보다 문맥 전달 방식과 세션 유지 전략이 중요합니다.</li>
+                <li>클라우드 IDE는 성능뿐 아니라 보안, 자산 관리, 온보딩 속도, 복구성을 같이 개선할 수 있습니다.</li>
+                <li>도입은 전면 교체보다 신규 프로젝트 파일럿과 단계적 확산이 현실적입니다.</li>
+            </ul>
+
+            <a href="../topic3/topic3.html" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+        `
+    },
+    {
+        id: 18,
+        title: "코덱스 플러그인 사용과 CLI 코딩",
+        category: "report",
+        categoryKo: "기술 리포트",
+        badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
+        author: "성현진 엔지니어 (개발 생산성)",
+        date: "2026.06.18",
+        readTime: "CLI 코딩 리포트",
+        summary: "Codex Plugins, Skills, Hooks, MCP, Image Gen을 중심으로 CLI 기반 AI 코딩 workflow와 Copilot CLI, Claude Code, Codex CLI의 선택 기준을 정리한 기술 리포트입니다.",
+        tags: ["Codex", "CLI Coding", "Plugins", "MCP", "Claude Code", "Copilot CLI"],
+        content: `
+            <h3>리포트 개요</h3>
+            <p>이 리포트는 CLI 기반 AI 코딩이 IDE 자동완성과 어떻게 다른지, 그리고 Codex가 plugin, skill, hook, MCP, Image Gen을 통해 개발 workflow 전체로 확장되는 방식을 정리합니다. 핵심은 AI가 코드를 제안하는 단계를 넘어, 터미널에서 repository 작업을 위임받고 사람이 검증 가능한 형태로 결과를 돌려주는 흐름입니다.</p>
+
+            <h3>핵심 질문</h3>
+            <ul>
+                <li>CLI 코딩은 IDE 기반 AI 코딩과 무엇이 다른가</li>
+                <li>Codex Plugin은 반복 workflow와 외부 연결을 어떻게 패키징하는가</li>
+                <li>Skills, Hooks, MCP는 각각 어떤 역할을 맡는가</li>
+                <li>Copilot CLI, Claude Code, Codex CLI는 어떤 상황에서 선택해야 하는가</li>
+            </ul>
+
+            <h3>주요 내용</h3>
+            <ul>
+                <li><strong>CLI 코딩 개념</strong>: 터미널에서 agent에게 파일 탐색, 코드 수정, 명령 실행, 테스트 실행, 결과 요약을 맡기는 방식입니다.</li>
+                <li><strong>Codex 확장 구조</strong>: Plugin은 skill, app integration, MCP server, hook 같은 요소를 묶어 팀 단위 workflow로 배포하는 단위입니다.</li>
+                <li><strong>Superpowers</strong>: agent가 바로 구현하지 않고 brainstorming, planning, worktree, execution, review 흐름을 따르도록 돕는 접근입니다.</li>
+                <li><strong>Image Gen</strong>: UI mockup, frontend asset, game asset, 제품 콘셉트 이미지를 코드 workflow 안에서 함께 반복하는 방식입니다.</li>
+                <li><strong>CLI 도구 비교</strong>: Codex CLI, Copilot CLI, Claude Code는 우열보다 사용 위치와 조직 workflow 적합성으로 비교해야 합니다.</li>
+            </ul>
+
+            <h3>실무 관점 포인트</h3>
+            <ul>
+                <li>CLI agent에게 바로 수정시키기보다 먼저 계획과 변경 범위를 요청해야 합니다.</li>
+                <li>branch 또는 worktree로 작업을 격리하고, diff와 테스트 결과를 검토 기준으로 삼아야 합니다.</li>
+                <li>MCP와 plugin은 강력하지만 외부 서비스 접근, 민감정보 노출, 자동 실행 권한을 함께 관리해야 합니다.</li>
+                <li>도구 선택보다 중요한 것은 계획, 검증, 권한 관리가 포함된 운영 workflow입니다.</li>
+            </ul>
+
+            <a href="../topic4/topic4.html" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
         `
     }
 ];
