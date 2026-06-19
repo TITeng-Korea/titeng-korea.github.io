@@ -152,7 +152,7 @@ tpayClient.enableNfcSensor(activity) { tagState ->
         badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
         author: "성현진 엔지니어 (개발 생산성)",
         date: "2026.06.18",
-        readTime: "Git 실무 리포트",
+        readTime: "읽는 시간 10분",
         summary: "AI가 만든 코드 변경을 Git diff, stage, commit, branch, PR 흐름으로 검토하고 설명하는 Git 실무 리포트입니다. VSCode Source Control 기준의 작업 루틴을 한 번에 정리했습니다.",
         tags: ["Git", "VSCode", "AI", "Diff", "DevWorkflow"],
         content: `
@@ -234,7 +234,7 @@ git revert &lt;commit-hash&gt;</code></pre>
         badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
         author: "성현진 엔지니어 (개발 생산성)",
         date: "2026.06.18",
-        readTime: "클라우드 IDE 리포트",
+        readTime: "읽는 시간 15분",
         summary: "AI 코딩 패러다임 전환, LLM의 문맥 처리 방식, 로컬 개발 환경의 구조적 한계, Antigravity IDE형 클라우드 개발 환경 아키텍처를 정리한 기술 리포트입니다.",
         tags: ["AI Coding", "LLM", "Cloud IDE", "Antigravity", "WASM"],
         content: `
@@ -279,7 +279,7 @@ git revert &lt;commit-hash&gt;</code></pre>
         badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
         author: "성현진 엔지니어 (개발 생산성)",
         date: "2026.06.18",
-        readTime: "CLI 코딩 리포트",
+        readTime: "읽는 시간 20분",
         summary: "Codex Plugins, Skills, Hooks, MCP, Image Gen을 중심으로 CLI 기반 AI 코딩 workflow와 Copilot CLI, Claude Code, Codex CLI의 선택 기준을 정리한 기술 리포트입니다.",
         tags: ["Codex", "CLI Coding", "Plugins", "MCP", "Claude Code", "Copilot CLI"],
         content: `
@@ -312,6 +312,55 @@ git revert &lt;commit-hash&gt;</code></pre>
             </ul>
 
             <a href="../topic4/topic4.html" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+        `
+    },
+    {
+        id: 19,
+        title: "Git 명령어 20가지: 명령어에서 AI 프롬프트로",
+        category: "report",
+        categoryKo: "기술 리포트",
+        badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
+        author: "성현진 엔지니어 (개발 생산성)",
+        date: "2026.06.19",
+        readTime: "읽는 시간 8분",
+        summary: "git status부터 cherry-pick까지 20개 Git 명령어를 기존 CLI 사용법과 AI 에이전트 프롬프트 작성법으로 나란히 비교한 발표용 슬라이드입니다.",
+        tags: ["Git", "AI", "Prompt", "CLI", "Slides"],
+        content: `
+            <h3>포스트 소개</h3>
+            <p>이 슬라이드는 Git 명령어를 단순히 외우는 자료가 아니라, AI 에이전트를 쓰기 전에는 명령어를 어떻게 직접 실행했고 지금은 같은 작업을 어떤 프롬프트로 요청해야 하는지 비교합니다. 핵심은 명령어를 없애는 것이 아니라 목표, 범위, 안전 조건, 검증 기준을 더 정확히 전달하는 것입니다.</p>
+
+            <h3>Before / Now 관점</h3>
+            <ul>
+                <li><strong>Before</strong>: 명령어와 옵션을 직접 조합하고 출력 결과를 사람이 읽은 뒤 다음 명령을 결정했습니다.</li>
+                <li><strong>Now</strong>: AI 에이전트에게 목표와 제약을 말하고, 에이전트가 실행한 명령과 diff, 테스트 결과를 사람이 검토합니다.</li>
+                <li><strong>좋은 프롬프트</strong>: 어떤 작업을 할지, 어떤 파일을 건드려도 되는지, 위험하면 어디서 멈출지를 포함합니다.</li>
+                <li><strong>마지막 책임</strong>: commit, push, reset 같은 변경 작업은 에이전트 결과를 확인한 뒤 승인하는 흐름이 안전합니다.</li>
+            </ul>
+
+            <h3>다루는 Git 명령어 20가지</h3>
+            <ul>
+                <li><strong>상태와 변경 검토</strong>: <code>git status</code>, <code>git diff</code></li>
+                <li><strong>커밋 구성</strong>: <code>git add</code>, <code>git commit</code></li>
+                <li><strong>브랜치 작업</strong>: <code>git branch</code>, <code>git switch</code>, <code>git checkout</code></li>
+                <li><strong>원격 동기화</strong>: <code>git fetch</code>, <code>git pull</code>, <code>git push</code></li>
+                <li><strong>기록 확인과 복구</strong>: <code>git log</code>, <code>git restore</code>, <code>git reset</code></li>
+                <li><strong>통합과 이력 정리</strong>: <code>git merge</code>, <code>git rebase</code>, <code>git cherry-pick</code></li>
+                <li><strong>작업 보관과 저장소 관리</strong>: <code>git stash</code>, <code>git remote</code>, <code>git clone</code>, <code>git tag</code></li>
+            </ul>
+
+            <h3>프롬프트 예시</h3>
+            <ul>
+                <li><strong>status</strong>: 현재 저장소 상태를 확인하고 수정/추가/삭제/추적 제외 파일을 표로 요약해줘.</li>
+                <li><strong>diff</strong>: 아직 커밋하지 않은 변경을 의도된 변경, 위험한 변경, 확인 질문으로 나눠 요약해줘.</li>
+                <li><strong>add</strong>: 이번 커밋 목적과 관련된 변경만 stage하고, 제외한 파일과 이유를 알려줘.</li>
+                <li><strong>pull</strong>: 원격 변경을 반영하되 충돌이 나면 자동 커밋하지 말고 충돌 파일과 해결 방향을 먼저 보고해줘.</li>
+                <li><strong>reset</strong>: soft, mixed, hard 차이를 설명하고 작업 손실 가능성이 있으면 실행 전 멈춰줘.</li>
+            </ul>
+
+            <a href="../topic2/git-commands-slides.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
