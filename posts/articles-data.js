@@ -396,6 +396,98 @@ bool EmvTranProc(BYTE Cmd_code, BYTE *pCmd, UINT nCmdlen, BYTE *pRsp, UINT *nRsp
         `
     },
     {
+        id: 22,
+        title: "PCI PTS: 결제 단말기 물리·논리 보안 요구사항 완전 분석",
+        category: "security",
+        categoryKo: "보안 및 인증 규격",
+        badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900",
+        author: "성현진 연구원 (모듈개발팀)",
+        date: "2026.06.25",
+        readTime: "읽는 시간 18분",
+        summary: "PCI PTS(PIN Transaction Security) 인증 체계와 POI 모듈별 요구사항을 분석합니다. 물리 보안(탬퍼 감지/대응), 논리 보안(PIN 암호화·키 관리), 오픈 프로토콜 요구사항까지 단말기 설계 실무 관점에서 정리합니다.",
+        tags: ["PCI", "PTS", "POI", "PIN", "TamperDetection", "KeyManagement", "HSM", "Security"],
+        content: `
+            <h3>PCI PTS란</h3>
+            <p>PCI PTS(PIN Transaction Security)는 PCI SSC(Payment Card Industry Security Standards Council)가 제정한 결제 단말기 보안 표준입니다. 카드 소지자의 PIN 및 민감 인증 데이터를 처리하는 모든 POI(Point of Interaction) 기기가 획득해야 하는 인증으로, 단말기 제조사는 설계·제조 단계부터 물리적·논리적 보안 요구사항을 충족해야 합니다.</p>
+
+            <h3>PTS 인증 모듈 구성</h3>
+            <p>PCI PTS는 기기 유형과 기능에 따라 세 가지 모듈로 구성됩니다.</p>
+            <ul>
+                <li><strong>POI 모듈</strong>: PIN 입력 기능이 있는 단말기(POS, 키오스크, ATM 연계 PED 등)에 적용되는 핵심 모듈입니다. 물리 보안, 논리 보안, PIN 암호화 요구사항을 모두 포함합니다.</li>
+                <li><strong>HSM 모듈</strong>: 키 관리·암호 연산을 전담하는 하드웨어 보안 모듈에 적용됩니다. 금융기관 서버 인프라에 위치하는 장비가 대상입니다.</li>
+                <li><strong>오픈 프로토콜(OP) 모듈</strong>: IP 네트워크를 통해 결제 데이터를 전송하는 기기가 추가로 충족해야 하는 통신 보안 요구사항입니다.</li>
+            </ul>
+
+            <h3>물리 보안(Physical Security) 요구사항</h3>
+            <p>PCI PTS에서 물리 보안은 공격자가 기기 내부에 물리적으로 접근해 PIN이나 암호키를 탈취하는 것을 방지하는 요구사항입니다.</p>
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
+                <strong>주요 물리 보안 요구사항</strong><br>
+                - <strong>탬퍼 감지(Tamper Detection)</strong>: 케이스 개봉, 드릴링, 화학약품 침투 등 비정상 접근 시 즉시 감지해야 합니다.<br>
+                - <strong>탬퍼 대응(Tamper Response)</strong>: 감지 즉시 내부 메모리(키, PIN 데이터)를 자동 소거(Zeroization)해야 합니다.<br>
+                - <strong>탬퍼 증거(Tamper Evidence)</strong>: 물리 접근 흔적이 육안으로 식별 가능하도록 봉인 라벨·잠금 구조를 적용해야 합니다.<br>
+                - <strong>환경 공격 방어</strong>: 비정상 전압·온도·주파수 범위에서 보안 민감 데이터가 유출되지 않아야 합니다.
+            </div>
+            <p>탬퍼 감지 회로는 일반적으로 배터리 백업(VBAT) 전원으로 항시 동작하며, 외부 전원이 차단된 상태에서도 감지·소거 기능이 유지되어야 합니다.</p>
+
+            <h3>논리 보안(Logical Security) 요구사항</h3>
+            <p>논리 보안은 소프트웨어·펌웨어 수준에서 PIN 및 암호키를 안전하게 처리하는 요구사항입니다.</p>
+            <ul>
+                <li><strong>PIN 입력 격리</strong>: PIN 입력 처리는 반드시 보안 프로세서 내 격리된 실행 환경에서 수행되어야 하며, 호스트 OS 또는 애플리케이션 영역에서 접근할 수 없어야 합니다.</li>
+                <li><strong>PIN 암호화</strong>: 입력된 PIN은 즉시 암호화(PIN Block 생성)되어야 하며, 평문 PIN이 메모리에 남아서는 안 됩니다.</li>
+                <li><strong>소프트웨어 인증</strong>: 부팅 시 펌웨어 서명 검증(Secure Boot)을 수행하여 미인가 코드 실행을 차단해야 합니다.</li>
+                <li><strong>디버그 포트 비활성화</strong>: JTAG, UART 디버그 인터페이스는 양산 단계에서 완전히 비활성화되어야 합니다.</li>
+                <li><strong>부채널 공격 대응</strong>: 전력 분석(SPA/DPA), 타이밍 공격에 취약한 암호 연산 구현을 금지합니다.</li>
+            </ul>
+
+            <h3>PIN Block 형식과 암호화</h3>
+            <p>PTS 인증 기기는 ISO 9564에 따른 PIN Block 형식으로 PIN을 암호화하여 전송해야 합니다. 가장 널리 쓰이는 형식은 Format 0(ISO Format 0)과 Format 4(ISO Format 4)입니다.</p>
+            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// ISO 9564 Format 0 PIN Block 구성
+// PIN Block  = XOR( PIN Field, PAN Field )
+// PIN Field  = 0 || PIN Length(4bit) || PIN Digits || Filler(F)
+// PAN Field  = 0000 || PAN[3..14] (우측 check digit 제외 12자리)
+
+// 예: PIN="1234", PAN="...4567890123456X"
+PIN Field: 04 12 34 FF FF FF FF FF
+PAN Field: 00 00 45 67 89 01 23 45
+PIN Block: 04 12 71 98 76 FE DC BA  ← XOR 결과, 3DES/AES로 암호화 전송</code></pre>
+
+            <h3>키 관리(Key Management)</h3>
+            <p>PTS 기기 내 암호키는 수명 주기 전 단계에서 엄격히 관리되어야 합니다.</p>
+            <ul>
+                <li><strong>초기 키 주입(Key Injection)</strong>: 제조 또는 배포 단계에서 물리적으로 보안된 환경(KIF, Key Injection Facility)에서만 마스터 키를 주입할 수 있습니다.</li>
+                <li><strong>키 계층 구조</strong>: 마스터 키(MK) → 세션 키(SK/PEK) → PIN 암호화 키(PEK)의 계층으로 분리하여 운용합니다.</li>
+                <li><strong>원격 키 갱신(DUKPT)</strong>: ANSI X9.24 Part 1(TDEA) 또는 Part 3(AES-128) 기반의 DUKPT(Derived Unique Key Per Transaction) 방식으로 거래마다 고유 키를 파생하여 사용합니다.</li>
+                <li><strong>키 소거</strong>: 탬퍼 감지, 키 만료, 비정상 상황 발생 시 즉시 키를 제로화합니다.</li>
+            </ul>
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
+                <strong>DUKPT 파생 구조 요약</strong><br>
+                초기 키(IPEK)를 KSN(Key Serial Number)과 함께 주입 → 각 거래마다 KSN을 증가시키며 단방향 파생 함수로 Future Key를 생성 → 동일 키를 재사용하지 않으므로 과거 거래 복호화 불가
+            </div>
+
+            <h3>오픈 프로토콜(OP) 모듈 보안</h3>
+            <p>IP 네트워크 기반 단말기는 OP 모듈 요구사항을 추가로 충족해야 합니다.</p>
+            <ul>
+                <li>TLS 1.2 이상의 안전한 전송 채널 사용 및 인증서 유효성 검증이 필수입니다.</li>
+                <li>불필요한 네트워크 서비스·포트를 비활성화하고, 화이트리스트 기반 통신만 허용해야 합니다.</li>
+                <li>네트워크 경유 펌웨어 업데이트 시 서명 검증 후에만 적용이 가능해야 합니다.</li>
+            </ul>
+
+            <h3>인증 등급(PTS POI Version)</h3>
+            <p>PCI PTS POI 인증은 버전이 올라갈수록 요구사항이 강화됩니다. 현재 시장에 유통되는 단말기는 v5 또는 v6 인증을 주로 요구하며, 구형 버전(v3 이하)은 폐기 일정에 따라 수용 종료(sunset) 됩니다.</p>
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+                <strong>버전별 주요 변경사항</strong><br>
+                - <strong>v4</strong>: 소프트웨어 보안 요구사항 강화, 부채널 공격 방어 기준 추가<br>
+                - <strong>v5</strong>: 오픈 프로토콜 모듈 분리, 비접촉 결제 보안 요구사항 신설<br>
+                - <strong>v6</strong>: AES-128 기반 DUKPT 의무화, 소프트웨어 서명 요구사항 강화
+            </div>
+
+            <a href="https://canva.link/7p9wi0t2xwuxq88" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+        `
+    },
+    {
         id: 21,
         title: "Mastercard Kernel 2: EMV Contactless Book C-2 거래 흐름 완전 분석",
         category: "security",
