@@ -57,6 +57,15 @@
         .carousel-scroll::-webkit-scrollbar {
             display: none;
         }
+        /* 단어 중간 줄바꿈 방지 */
+        #modal-content {
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        #modal-content pre, #modal-content code {
+            word-break: normal;
+            overflow-wrap: normal;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-darkBg dark:text-slate-100 font-sans transition-colors duration-300 min-h-screen flex flex-col">
@@ -229,7 +238,7 @@ client.startPayment(request) { response ->
                     엔지니어링 문화
                 </button>
                 <button onclick="setCategory('report')" id="tab-report" class="category-tab px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                    기술 리포트
+                    AI 엔지니어링
                 </button>
             </div>
 
@@ -1035,7 +1044,7 @@ int main() {
             document.getElementById('post-count').innerText = sortedFiltered.length;
             const resultLabel = document.getElementById('result-label');
             if (resultLabel) {
-                resultLabel.innerText = currentCategory === 'report' ? '기술 리포트' : '기술 포스트';
+                resultLabel.innerText = currentCategory === 'report' ? 'AI 엔지니어링' : '기술 포스트';
             }
 
             // 태그 정렬 활성화 정보 표기
