@@ -1,265 +1,276 @@
-# TIT-PCI-DB HTML Slides Design
+# TIT-PCI-DB HTML 슬라이드 설계
 
-Date: 2026-07-02
-Source:
+작성일: 2026-07-02
+원본 자료:
 - `output/pdf/TIT-PCI-DB_summary.md`
 - `temp/TIT-PCI-DB V03_260512.pdf`
 
-## Goal
+## 목표
 
-Create a single standalone HTML slide deck for a technical design review of TIT-PCI-DB.
+TIT-PCI-DB의 기술 검토 발표를 위한 단일 HTML 슬라이드 덱을 제작한다.
 
-The deck should:
-- fit a 35 to 40 minute internal technical review
-- use one HTML file with inline CSS and JS
-- include HTML-generated diagrams wherever practical
-- reserve PDF circuit captures as placeholders instead of embedding images now
-- prioritize design intent, signal flow, and review risks over marketing-style presentation
+슬라이드는 다음 조건을 만족해야 한다.
+- 35~40분 분량의 내부 기술 검토 발표에 맞을 것
+- HTML 파일 1개 안에 CSS와 JS를 모두 포함할 것
+- 가능한 시각 자료는 HTML 도식으로 직접 표현할 것
+- 실제 회로 캡처 이미지는 지금 넣지 않고 자리표시만 둘 것
+- 홍보용 연출보다 설계 의도, 신호 흐름, 검토 리스크가 잘 보이도록 구성할 것
 
-## Output
+## 결과물
 
-- Final artifact: `output/pdf/TIT-PCI-DB_slides.html`
-- Format: standalone HTML, directly openable in a browser
-- Presentation ratio: 16:9
-- Navigation: left/right keyboard navigation, fullscreen toggle, page counter
-- Excluded UI: progress bar
+- 최종 산출물: `output/pdf/TIT-PCI-DB_slides.html`
+- 형식: 브라우저에서 바로 열 수 있는 standalone HTML
+- 화면 비율: 16:9
+- 탐색 기능: 좌우 키 이동, 전체 화면 전환, 페이지 카운터
+- 제외 기능: 진행 바
 
-## Audience And Tone
+## 청중과 톤
 
-- Audience: internal technical review
-- Tone: concise, engineering-first, review-oriented
-- Language: Korean
+- 청중: 내부 기술 검토 참석자
+- 톤: 간결하고 검토 중심적인 엔지니어링 문체
+- 언어: 한국어
 
-The slides should make it easy to explain:
-- what each block does
-- how it connects to adjacent blocks
-- what signals or conditions gate correct operation
-- what should be checked during review
+슬라이드는 아래 항목이 바로 설명되도록 구성한다.
+- 각 기능 블록이 무엇을 하는지
+- 인접 블록과 어떻게 연결되는지
+- 어떤 신호와 조건이 정상 동작을 좌우하는지
+- 검토 시 무엇을 우선 확인해야 하는지
 
-## Content Strategy
+본문 카피 원칙:
+- 실제 슬라이드의 제목, 본문, 보조 설명, 플레이스홀더 문구는 모두 한국어로 작성한다.
+- 부품명, 신호명, 인터페이스명처럼 원어 표기가 필요한 항목만 영문을 유지한다.
+- 예: `MAX32560`, `QSPI`, `PWR_GOOD`, `RF_PWR_ON`
 
-The original summary contains 12 core content sections. To reach a 40-minute review format without padding, the deck expands them into 18 slides by splitting:
-- architecture overview from review criteria
-- NFC block from NFC review concerns
-- system implementation details from cross-block dependency review
-- final summary from terminology/concept review
+## 내용 구성 전략
 
-Each slide should support roughly 2 minutes of explanation, with deeper slides such as MCU, Secure Box, NFC, Power, and Backup Bat supporting 2 to 3 minutes each.
+원본 요약은 12개 핵심 주제로 구성되어 있다. 이를 억지로 늘리지 않고 40분 발표 분량으로 확장하기 위해 아래처럼 18장으로 재구성한다.
+- 전체 구조 설명과 검토 기준을 분리
+- NFC 기능 설명과 NFC 검토 포인트를 분리
+- 기능 설명과 블록 간 상호의존성을 분리
+- 최종 요약과 핵심 용어 정리를 분리
 
-## Visual Strategy
+기본적으로 슬라이드 1장당 약 2분 설명이 가능해야 하며, 다음 주제는 2~3분 설명을 감당할 수 있도록 밀도를 둔다.
+- MCU
+- Secure Box
+- NFC
+- Power
+- Backup Battery
 
-Two visual types are allowed:
+## 시각 자료 전략
 
-1. HTML diagrams
-- block diagrams
-- boot and signal flow diagrams
-- dependency maps
-- checklist cards
-- risk matrix
-- concept glossary cards
+허용하는 시각 자료는 두 종류만 사용한다.
 
-2. PDF capture placeholders
-- use a labeled panel that states where a future circuit capture should be inserted
-- each placeholder should include:
-  - PDF page number
-  - source sheet name
-  - target area to capture
-  - why that capture matters
+1. HTML 도식
+- 블록 다이어그램
+- 부팅/신호 흐름도
+- 상호의존성 맵
+- 체크리스트 카드
+- 리스크 매트릭스
+- 용어 정리 카드
 
-No raster capture is embedded in this phase.
+2. PDF 캡처 자리표시
+- 실제 회로 캡처가 들어갈 위치를 명확하게 적은 패널로 표시한다.
+- 각 자리표시에는 아래 정보를 넣는다.
+  - PDF 페이지 번호
+  - 시트 이름
+  - 캡처 대상 영역
+  - 왜 이 캡처가 필요한지
 
-## Slide List
+이번 단계에서는 실제 이미지 파일을 삽입하지 않는다.
+
+## 슬라이드 목록
 
 ### 1. 표지
-- Purpose: introduce TIT-PCI-DB as an integrated secure system board
-- Content:
-  - board identity
-  - review scope
-  - source document version/date
-- Visual:
-  - typographic cover
-  - no capture required
+- 목적: TIT-PCI-DB를 통합형 보안 시스템 보드로 소개한다.
+- 내용:
+  - 보드 이름
+  - 발표 목적
+  - 검토 범위
+  - 원본 문서 버전과 날짜
+- 시각 자료:
+  - 타이포 중심 표지
+  - 캡처 불필요
 
 ### 2. 문서 범위와 검토 기준
-- Purpose: define what this review covers
-- Content:
-  - schematic scope
-  - included review lenses: control, power, security, interface
-  - excluded topics if needed: layout detail validation, manufacturing release detail
-- Visual:
-  - review scope cards
+- 목적: 이번 발표에서 어디까지 검토하는지 정의한다.
+- 내용:
+  - 회로도 기준 범위
+  - 제어, 전원, 보안, 인터페이스 관점
+  - 이번 발표에서 깊게 다루지 않는 범위
+- 시각 자료:
+  - 검토 범위 카드
 
 ### 3. 시스템 전체 블록도
-- Purpose: show whole-board structure at a glance
-- Content:
-  - MAX32560 as control center
-  - Flash, Secure Box, NFC, UART/USB, LED, Power, Backup relationships
-- Visual:
-  - HTML block diagram
-  - placeholder for `PDF p.2 BLOCK DIAGRAM`
+- 목적: 보드 전체 구성을 한눈에 보여준다.
+- 내용:
+  - MAX32560 중심 구조
+  - Flash, Secure Box, NFC, UART/USB, LED, Power, Backup 간 연결
+- 시각 자료:
+  - HTML 블록 다이어그램
+  - `PDF p.2 BLOCK DIAGRAM` 자리표시
 
 ### 4. 전원 유입부터 기능 활성화까지
-- Purpose: explain the startup chain
-- Content:
-  - VDD_EXT input
-  - 5V and 3.3V generation
-  - clock/reset readiness
-  - MCU boot
-  - Flash-dependent functional activation
-- Visual:
-  - HTML boot sequence flow
+- 목적: 시스템이 켜져서 동작하기까지의 순서를 설명한다.
+- 내용:
+  - VDD_EXT 입력
+  - 5V, 3.3V 생성
+  - 클럭과 리셋 확인
+  - MCU 부팅
+  - Flash 로드 후 기능 활성화
+- 시각 자료:
+  - HTML 부팅 시퀀스 흐름도
 
 ### 5. 핵심 제어부: MAX32560
-- Purpose: explain the central controller requirements
-- Content:
-  - MCU role
-  - 12MHz and 32.768kHz clocks
-  - reset behavior
-  - JTAG/USB debug path
-  - VBAT relation
-- Visual:
-  - HTML signal relationship diagram
-  - placeholder for `PDF p.3 S01.MCU`
+- 목적: 중앙 제어부의 동작 조건을 설명한다.
+- 내용:
+  - MCU 역할
+  - 12MHz, 32.768kHz 클럭
+  - 리셋 조건
+  - JTAG/USB 디버그 경로
+  - VBAT 연계
+- 시각 자료:
+  - HTML 주변 신호 관계도
+  - `PDF p.3 S01.MCU` 자리표시
 
 ### 6. 외부 저장장치와 Secure 연동
-- Purpose: explain why external Flash matters to both boot and security
-- Content:
+- 목적: 외부 Flash가 부팅과 보안 모두에 왜 중요한지 설명한다.
+- 내용:
   - W25Q128JVPIM
-  - QSPI interface
-  - code/config/data storage
-  - Secure Box relationship
-- Visual:
-  - MCU-Flash-Secure data path diagram
-  - placeholder for `PDF p.4 S02.FLASH`
+  - QSPI 인터페이스
+  - 코드/설정/데이터 저장
+  - Secure Box 연계
+- 시각 자료:
+  - MCU-Flash-Secure 데이터 경로도
+  - `PDF p.4 S02.FLASH` 자리표시
 
 ### 7. 물리 보안 구조
-- Purpose: explain tamper detection architecture
-- Content:
+- 목적: 물리 보안 감지 구조를 설명한다.
+- 내용:
   - tamper switch
   - mesh pattern
-  - layer usage
-  - detection and bypass resistance
-- Visual:
-  - Secure Box concept diagram
-  - placeholder for `PDF p.5 S03.SECURE_BOX`
+  - 레이어 활용
+  - 감지 방식과 우회 저항성
+- 시각 자료:
+  - Secure Box 개념도
+  - `PDF p.5 S03.SECURE_BOX` 자리표시
 
 ### 8. NFC 통신 블록
-- Purpose: explain the RF communication chain
-- Content:
+- 목적: RF 통신 경로를 설명한다.
+- 내용:
   - PN5180
-  - SPI control
-  - antenna
+  - SPI 제어
+  - 안테나
   - RF matching
   - EMC filtering
   - RF_PWR_ON
-- Visual:
-  - RF path concept diagram
-  - placeholder for `PDF p.6 S04.GPIO/NFC`
+- 시각 자료:
+  - RF 경로 개념도
+  - `PDF p.6 S04.GPIO/NFC` 자리표시
 
 ### 9. NFC 설계 검토 포인트
-- Purpose: highlight review-specific concerns beyond basic function
-- Content:
-  - RF_PWR_ON polarity note
-  - matching and antenna interaction
-  - EMI/noise sensitivity
-  - bring-up and debug focus
-- Visual:
-  - checklist or concern cards
+- 목적: 기능 설명을 넘어 실제 검토 포인트를 짚는다.
+- 내용:
+  - RF_PWR_ON polarity 주의점
+  - 매칭 회로와 안테나 상호 영향
+  - EMI/노이즈 민감성
+  - bring-up 및 디버깅 포인트
+- 시각 자료:
+  - 체크리스트 또는 검토 카드
 
 ### 10. UART/USB 외부 인터페이스
-- Purpose: explain debug and host communication interfaces
-- Content:
-  - UART0/UART1 usage
-  - USB_DP/USB_DM role
-  - differential routing concern
-  - ESD concern
-  - separation of internal versus external use
-- Visual:
-  - interface branching diagram
-  - placeholder for `PDF p.7 S05.UART/USB`
+- 목적: 디버그와 외부 호스트 연결 경로를 설명한다.
+- 내용:
+  - UART0/UART1 용도
+  - USB_DP/USB_DM 역할
+  - 차동 배선 주의점
+  - ESD 보호 포인트
+  - 내부용/외부용 구분
+- 시각 자료:
+  - 인터페이스 분기 구조도
+  - `PDF p.7 S05.UART/USB` 자리표시
 
 ### 11. LED 상태 표시 블록
-- Purpose: explain visual status reporting
-- Content:
+- 목적: 상태 표시 구조를 설명한다.
+- 내용:
   - LP5012
-  - RGB LED channels
-  - status-color mapping
-  - value as immediate operator feedback
-- Visual:
-  - status-color mapping table
-  - placeholder for `PDF p.8 S06.LED`
+  - RGB LED 채널 구성
+  - 상태-색상 매핑
+  - 즉시 확인 가능한 운영자 피드백
+- 시각 자료:
+  - 상태-색상 매핑 표
+  - `PDF p.8 S06.LED` 자리표시
 
 ### 12. 메인 전원 생성부
-- Purpose: explain the primary rail generation logic
-- Content:
-  - VDD_EXT input
-  - TPS61252DSG boost path
-  - 5V and 3.3V rail relation
-  - PWR_GOOD meaning
-  - noise/isolation implication
-- Visual:
-  - power rail generation diagram
-  - placeholder for `PDF p.9 S07.POWER`
+- 목적: 메인 전원 레일 생성 구조를 설명한다.
+- 내용:
+  - VDD_EXT 입력
+  - TPS61252DSG 승압 경로
+  - 5V와 3.3V 레일 관계
+  - PWR_GOOD 의미
+  - 노이즈와 레일 분리 의미
+- 시각 자료:
+  - 전원 레일 생성 다이어그램
+  - `PDF p.9 S07.POWER` 자리표시
 
 ### 13. CR2032 백업 전원
-- Purpose: explain low-power retention and fallback behavior
-- Content:
-  - CR2032 battery
-  - TPS3619-33DGK monitor
-  - VBAT, PFO, RESET relation
-  - low-power backup mode
-  - backup current and lifetime discussion
-- Visual:
-  - backup switchover flow
-  - placeholder for `PDF p.10 S08.BACKUP_BAT`
+- 목적: 저전력 유지와 백업 전환 동작을 설명한다.
+- 내용:
+  - CR2032 배터리
+  - TPS3619-33DGK 감시 IC
+  - VBAT, PFO, RESET 관계
+  - 저전력 백업 모드
+  - 유지 전류와 예상 수명 해석
+- 시각 자료:
+  - 백업 전환 흐름도
+  - `PDF p.10 S08.BACKUP_BAT` 자리표시
 
 ### 14. 설계 규칙과 레이아웃 원칙
-- Purpose: surface board-level rules from the cover page notes
-- Content:
-  - bypass capacitor placement
-  - power handling before inner-layer connection
-  - naming and pin marking conventions
-  - review-first layout guidance
-- Visual:
-  - rule cards
-  - placeholder for `PDF p.1 COVER notes`
+- 목적: 표지 페이지의 보드 차원 규칙을 검토 포인트로 끌어올린다.
+- 내용:
+  - bypass capacitor 배치 원칙
+  - 내층 연결 전 전원 처리 원칙
+  - 이름과 핀 표기 규칙
+  - 배치 검토 우선 원칙
+- 시각 자료:
+  - 규칙 카드
+  - `PDF p.1 COVER notes` 자리표시
 
 ### 15. 기능 블록 간 상호의존성
-- Purpose: show how failures propagate across the board
-- Content:
-  - power instability impact
-  - clock/reset impact
-  - RF path impact
-  - interface noise impact
-  - backup relation to reset/state retention
-- Visual:
-  - dependency map
+- 목적: 문제 발생 시 영향이 어떻게 전파되는지 보여준다.
+- 내용:
+  - 전원 불안정 영향
+  - 클럭/리셋 영향
+  - RF 경로 영향
+  - 인터페이스 노이즈 영향
+  - 백업 전원과 리셋/상태 유지 관계
+- 시각 자료:
+  - 상호의존성 맵
 
 ### 16. 기술 검토 시 우선 리스크
-- Purpose: summarize what deserves early scrutiny
-- Content:
+- 목적: 먼저 봐야 할 리스크를 요약한다.
+- 내용:
   - power integrity
-  - tamper path reliability
-  - RF tuning and matching
+  - tamper 경로 신뢰성
+  - RF tuning과 matching
   - USB routing/ESD
-  - backup current assumption validity
-- Visual:
-  - risk matrix
+  - backup current 가정의 타당성
+- 시각 자료:
+  - 리스크 매트릭스
 
 ### 17. 핵심 정리
-- Purpose: close the technical narrative cleanly
-- Content:
-  - control: MAX32560
-  - storage/security: Flash and Secure Box
-  - external communication: NFC, UART, USB
-  - status display: LED
-  - system stability: power and battery
-- Visual:
-  - integrated summary diagram or emphasis cards
+- 목적: 기술 흐름을 정리하며 마무리한다.
+- 내용:
+  - 제어: MAX32560
+  - 저장/보안: Flash, Secure Box
+  - 외부 통신: NFC, UART, USB
+  - 상태 표시: LED
+  - 안정성: 전원과 배터리
+- 시각 자료:
+  - 통합 요약 도식 또는 강조 카드
 
 ### 18. 핵심 단어와 개념 정리
-- Purpose: normalize terminology for review discussion
-- Content:
+- 목적: 발표 중 반복되는 용어를 한 장에서 정리한다.
+- 내용:
   - MCU
   - QSPI
   - Tamper
@@ -270,78 +281,78 @@ No raster capture is embedded in this phase.
   - ESD
   - RF
   - EMC
-- Visual:
-  - glossary cards
+- 시각 자료:
+  - 용어 정리 카드
 
-## PDF Placeholder Mapping
+## PDF 자리표시 기준
 
 - `p.1` `D01. COVER`
-  - use for board rules, notes, and manufacturing/stack context references
+  - 보드 규칙, 주의사항, 적층 관련 기준에 사용
 - `p.2` `D02. BLOCK DIAG1`
-  - use for whole-system block capture
+  - 시스템 전체 블록도 캡처에 사용
 - `p.3` `S01.MCU`
-  - use for MCU, clock, reset, JTAG area
+  - MCU, 클럭, 리셋, JTAG 영역 캡처에 사용
 - `p.4` `S02.FLASH`
-  - use for Flash and Secure-related path
+  - Flash 및 Secure 연동 경로 캡처에 사용
 - `p.5` `S03.SECURE_BOX`
-  - use for secure box and tamper/mesh structure
+  - Secure Box와 tamper/mesh 구조 캡처에 사용
 - `p.6` `S04.GPIO/NFC`
-  - use for PN5180, antenna, RF matching, EMC filter
+  - PN5180, 안테나, RF matching, EMC filter 캡처에 사용
 - `p.7` `S05.UART/USB`
-  - use for UART/USB routing and ESD region
+  - UART/USB 배선 및 ESD 영역 캡처에 사용
 - `p.8` `S06.LED`
-  - use for LP5012 and RGB LED region
+  - LP5012와 RGB LED 영역 캡처에 사용
 - `p.9` `S07.POWER`
-  - use for boost/regulator and PWR_GOOD region
+  - 승압/레귤레이터 및 PWR_GOOD 영역 캡처에 사용
 - `p.10` `S08.BACKUP_BAT`
-  - use for battery monitor and backup current notes
+  - 배터리 감시와 백업 전류 계산 영역 캡처에 사용
 
-## Layout Pattern
+## 레이아웃 패턴
 
-The deck should follow a consistent technical-review rhythm:
+슬라이드는 일관된 기술 검토 흐름을 유지한다.
 
-- title/header on top
-- primary content area split into text and visual region
-- visual region uses either diagram or placeholder card
-- bottom line may contain a short review note or interpretation cue
+- 상단 제목/헤더
+- 본문은 텍스트 영역과 시각 자료 영역으로 분리
+- 시각 자료 영역은 HTML 도식 또는 자리표시 카드 사용
+- 필요 시 하단에 짧은 review note 배치
 
-Preferred patterns:
+우선 사용할 패턴은 아래와 같다.
 - cover
 - left text / right visual
 - top summary / bottom flow
 - matrix/cards for review-oriented slides
 
-## Interaction Pattern
+## 동작 패턴
 
-- left/right arrow navigation
-- page up/page down support is acceptable
-- fullscreen toggle support is acceptable
-- page counter required
-- progress bar not included
-- print stylesheet should output one 16:9 slide per page
+- 좌우 화살표 키 이동
+- Page Up / Page Down 지원 가능
+- 전체 화면 전환 지원 가능
+- 페이지 카운터 필수
+- 진행 바 제외
+- 인쇄 시 16:9 슬라이드 1장씩 출력
 
-## Styling Direction
+## 시각 스타일 방향
 
-- dark technical review theme
-- strong contrast for projection
-- restrained accent palette: cyan, blue, amber
-- clear hierarchy for headings, labels, and notes
-- avoid decorative motion that distracts from engineering content
+- 어두운 기술 검토 테마
+- 프로젝터에서도 읽히는 높은 대비
+- 강조색은 cyan, blue, amber 중심
+- 제목, 라벨, 노트의 위계가 명확할 것
+- 기술 내용 해석을 방해하는 장식성 모션은 배제
 
-## Acceptance Criteria
+## 완료 기준
 
-The implementation is acceptable when:
-- the full deck is contained in one HTML file
-- all 18 slides exist and follow the approved structure
-- HTML diagrams are present where planned
-- every capture-needed slide includes a clear placeholder with PDF location
-- navigation works without external build tooling
-- the deck is readable in browser and printable in 16:9 layout
-- no slide overflows or truncates core text at normal viewport size
+아래 조건을 만족하면 구현 완료로 본다.
+- 전체 덱이 HTML 파일 1개에 들어갈 것
+- 승인된 18장 구성이 모두 반영될 것
+- 계획된 HTML 도식이 실제로 들어갈 것
+- 캡처가 필요한 슬라이드마다 PDF 위치가 명확한 자리표시가 있을 것
+- 별도 빌드 없이 탐색이 동작할 것
+- 브라우저 보기와 16:9 인쇄 레이아웃이 모두 읽기 좋을 것
+- 기본 화면 크기에서 핵심 텍스트가 넘치거나 잘리지 않을 것
 
-## Out Of Scope
+## 범위 제외
 
-- embedding actual circuit capture images in this phase
-- building a reusable slide framework for other presentations
-- adding speaker notes beyond brief review cues
-- adding progress bar UI
+- 실제 회로 캡처 이미지 삽입
+- 다른 발표에도 재사용할 범용 슬라이드 프레임워크 제작
+- 짧은 review cue를 넘는 상세 발표자 노트 작성
+- 진행 바 UI 추가
