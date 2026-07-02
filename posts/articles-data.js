@@ -912,5 +912,41 @@ PIN Block: 04 12 71 98 76 FE DC BA  ← XOR 결과, 3DES/AES로 암호화 전송
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
         `
+    },
+    {
+        id: 25,
+        title: "CSTS 소프트웨어 테스트 자료 정리",
+        category: "sw",
+        categoryKo: "S/W & 결제 플랫폼",
+        badgeClass: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-sky-300 border border-blue-200 dark:border-blue-900",
+        author: "성현진 연구원 (모듈개발팀)",
+        date: "2026.07.03",
+        readTime: "읽는 시간 7분",
+        summary: "요구사항부터 테스트 원칙, 설계 기법, 구조 기반 커버리지, ISO/IEC/IEEE 29119까지 소프트웨어 테스트 전반을 단계적으로 정리한 CSTS 자료입니다.",
+        tags: ["CSTS", "SoftwareTesting", "QA", "Lecture", "Slides", "ISO29119"],
+        content: `
+            <h3>CSTS 자료 소개</h3>
+            <p>이 자료는 <strong>요구사항</strong>, <strong>테스트 원칙</strong>, <strong>설계 기법</strong>, <strong>구조 기반 커버리지</strong>, 그리고 <strong>테스트 프로세스</strong>까지 소프트웨어 테스트의 주요 주제를 한 흐름으로 정리한 CSTS 자료입니다. 결정 테이블, 상태 전이 테스트, ISO/IEC/IEEE 29119까지 함께 다루며 전체 구성을 단계적으로 따라갈 수 있게 묶었습니다.</p>
+
+            <h3>다루는 범위</h3>
+            <ul>
+                <li><strong>요구사항 개요</strong>: 요구사항 정의와 분류, 테스트 기준으로서의 의미</li>
+                <li><strong>테스트 기본 원칙</strong>: SW 테스팅 7가지 기본 원칙, G.J 마이어스 테스트 원칙</li>
+                <li><strong>테스트 방법</strong>: 테스트 레벨, 기능/비기능, 정적/동적 테스트</li>
+                <li><strong>설계 기법 예제</strong>: 동등 분할, 경계 값 분석, 결정 테이블, 상태 전이 테스트</li>
+                <li><strong>구조 기반 테스트</strong>: 구문, 결정, 조건, MC/DC, 다중 조건 커버리지</li>
+                <li><strong>프로세스</strong>: ISO/IEC/IEEE 29119와 조직/관리/동적 테스트 프로세스</li>
+            </ul>
+
+            <h3>활용 포인트</h3>
+            <p>프로젝터에서 보기 좋게 글자 크기와 표 가독성을 조정했고, 좌우 화살표만으로 넘길 수 있게 구성했습니다. 대본은 슬라이드 순서에 맞춰 바로 읽거나 각 장표의 설명 흐름을 참고하는 용도로 사용할 수 있습니다.</p>
+
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a href="./csts/csts.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                    <span>슬라이드 열기</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                </a>
+            </div>
+        `
     }
 ];
