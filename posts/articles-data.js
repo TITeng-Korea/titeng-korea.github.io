@@ -616,7 +616,7 @@ else                                            → TC (오프라인 승인)</co
                     <div><code class="font-bold text-emerald-600 dark:text-emerald-400">HCE</code> — Host Card Emulation, 모바일 기기 소프트웨어 카드 에뮬레이션</div>
                 </div>
             </div>
-            <a href="https://canva.link/2c897tyhpxhk06h" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <a href="./kernel/amex.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
@@ -734,7 +734,7 @@ else                                            → TC (오프라인 승인)</co
                     <div><code class="font-bold text-emerald-600 dark:text-emerald-400">RFU</code> — Reserved for Future Use, 예약된 미래 사용 비트</div>
                 </div>
             </div>
-            <a href="https://canva.link/w0ga26p9qg4qs3k" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <a href="./kernel/mastercard.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
