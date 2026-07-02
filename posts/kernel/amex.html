@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMEX Transaction Flow Analysis</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap");
+
+    :root {
+      --bg: #2e3440;
+      --slide-bg: #ffffff;
+      --panel: #efefef;
+      --line: #111111;
+      --muted: #6b6b6b;
+      --code-bg: #111317;
+      --code-fg: #e8edf2;
+      --accent: #3f4b64;
+      --base-w: 1280;
+      --base-h: 720;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 35%),
+        linear-gradient(180deg, #343b4d 0%, var(--bg) 100%);
+      font-family: "Inter", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: #111;
+    }
+
+    * { box-sizing: border-box; }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .stage {
+      width: 1280px;
+      height: 720px;
+      background: var(--slide-bg);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.36);
+      transform-origin: center center;
+      position: relative;
+      overflow: hidden;
+      border-radius: 2px;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 0 24px 18px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .top-rule {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      top: 39px;
+      height: 2px;
+      background: #111;
+    }
+
+    .slide-title {
+      margin: 75px 0 0;
+      text-align: center;
+      font-size: 60px;
+      line-height: 1.02;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+    }
+
+    .slide-title.small {
+      font-size: 54px;
+    }
+
+    .slide-title.xsmall {
+      font-size: 48px;
+    }
+
+    .slide-subtitle {
+      text-align: center;
+      font-size: 22px;
+      margin-top: 16px;
+      line-height: 1.32;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .title-slide {
+      display: grid;
+      place-items: center;
+      padding-top: 58px;
+    }
+
+    .title-card {
+      width: 620px;
+      text-align: center;
+    }
+
+    .author-table {
+      width: 620px;
+      margin: 56px auto 0;
+      border-collapse: collapse;
+      font-size: 18px;
+      text-align: center;
+      table-layout: fixed;
+    }
+
+    .author-table td {
+      border-top: 2px solid #111;
+      border-bottom: 2px solid #111;
+      padding: 12px 10px 11px;
+    }
+
+    .author-table td + td {
+      border-left: 2px solid #111;
+    }
+
+    .author-name {
+      font-weight: 800;
+    }
+
+    .panel-grid {
+      display: grid;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .cards-3 { grid-template-columns: repeat(3, 1fr); }
+    .cards-2 { grid-template-columns: repeat(2, 1fr); }
+    .cards-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .slide-header {
+      padding-top: 20px;
+    }
+
+    .hero-lead {
+      margin: 34px auto 0;
+      width: min(980px, calc(100% - 120px));
+      text-align: left;
+      font-size: 22px;
+      line-height: 1.42;
+      letter-spacing: -0.03em;
+    }
+
+    .bullet-stack {
+      width: min(1100px, calc(100% - 100px));
+      margin: 26px auto 0;
+      font-size: 23px;
+      line-height: 1.34;
+      letter-spacing: -0.03em;
+    }
+
+    .bullet-stack .bullet {
+      padding: 5px 0;
+    }
+
+    .panel {
+      border: 2.5px solid var(--line);
+      background: var(--panel);
+      min-height: 278px;
+      padding: 10px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .panel.tight { min-height: 254px; }
+    .panel.tall { min-height: 308px; }
+    .panel.centered { align-items: center; }
+    .panel.left { align-items: flex-start; }
+
+    .panel-title {
+      font-size: 29px;
+      line-height: 1.16;
+      font-weight: 500;
+      text-align: center;
+      letter-spacing: -0.04em;
+      width: 100%;
+    }
+
+    .panel-title.bold {
+      font-weight: 800;
+    }
+
+    .panel-items {
+      margin-top: 34px;
+      font-size: 22px;
+      line-height: 1.38;
+      letter-spacing: -0.03em;
+      width: 100%;
+      text-align: left;
+      padding: 0 8px;
+    }
+
+    .panel-items.left {
+      margin-top: 34px;
+    }
+
+    .panel-items.center {
+      text-align: center;
+      padding: 0;
+    }
+
+    .panel-items .item {
+      margin: 0;
+      padding: 2px 0;
+    }
+
+    .panel-items .item + .item {
+      margin-top: 1px;
+    }
+
+    .note-box {
+      border: 2.5px solid var(--line);
+      background: var(--panel);
+      padding: 12px 18px 13px;
+      font-size: 22px;
+      line-height: 1.3;
+      letter-spacing: -0.03em;
+      text-align: center;
+    }
+
+    .note-box.left {
+      text-align: left;
+    }
+
+    .bottom-note {
+      margin-top: 26px;
+    }
+
+    .two-col-note-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .two-col-note-layout .panel {
+      min-height: 286px;
+    }
+
+    .three-col-note-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-top: 42px;
+    }
+
+    .three-col-note-layout .panel {
+      min-height: 286px;
+    }
+
+    .stack-note {
+      margin-top: 24px;
+    }
+
+    .wide-note {
+      margin-top: 18px;
+    }
+
+    .flow-layout {
+      margin-top: 36px;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: 1fr 44px 1fr 44px 1fr;
+      gap: 0;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .flow-grid.two-row {
+      grid-template-columns: 1fr 44px 1fr;
+    }
+
+    .flow-box {
+      border: 2.5px solid var(--line);
+      background: var(--panel);
+      min-height: 90px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 24px;
+      line-height: 1.14;
+      letter-spacing: -0.03em;
+    }
+
+    .flow-arrow {
+      height: 0;
+      position: relative;
+      align-self: center;
+      justify-self: center;
+      width: 34px;
+      height: 22px;
+      background: var(--accent);
+      clip-path: polygon(0 0, 100% 50%, 0 100%, 14% 50%);
+    }
+
+    .flow-arrow.down {
+      width: 22px;
+      height: 34px;
+      clip-path: polygon(50% 100%, 100% 0, 0 0);
+      transform: rotate(180deg);
+    }
+
+    .decision-layout {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      gap: 8px 10px;
+      align-items: end;
+      margin-top: 34px;
+    }
+
+    .decision-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .decision-table th,
+    .decision-table td {
+      border: 1.8px solid rgba(17, 17, 17, 0.4);
+      padding: 22px 12px;
+      text-align: center;
+      vertical-align: middle;
+      background: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+    }
+
+    .decision-table th {
+      background: #efefef;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    .decision-side {
+      align-self: end;
+      font-size: 18px;
+      line-height: 1.26;
+      letter-spacing: -0.03em;
+      padding-right: 4px;
+    }
+
+    .decision-side .label {
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .table-layout {
+      margin-top: 34px;
+    }
+
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
+    .main-table th,
+    .main-table td {
+      border: 1.6px solid rgba(17, 17, 17, 0.28);
+      padding: 16px 14px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .main-table th {
+      background: #efefef;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-top: 36px;
+    }
+
+    .summary-grid.bottom {
+      grid-template-columns: repeat(2, 1fr);
+      width: calc(100% - 100px);
+      margin: 20px auto 0;
+    }
+
+    .summary-card {
+      min-height: 176px;
+      border: 2.5px solid var(--line);
+      background: var(--panel);
+      padding: 10px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+    }
+
+    .summary-card .title {
+      font-size: 24px;
+      line-height: 1.18;
+      font-weight: 500;
+      margin-top: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .summary-card .text {
+      margin-top: 34px;
+      font-size: 22px;
+      line-height: 1.36;
+      letter-spacing: -0.03em;
+    }
+
+    .code-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.95fr;
+      gap: 24px;
+      margin-top: 34px;
+      align-items: start;
+    }
+
+    .code-layout.two-right {
+      grid-template-columns: 0.95fr 1fr;
+    }
+
+    .code-box {
+      background: #111317;
+      color: var(--code-fg);
+      border-radius: 2px;
+      padding: 10px 14px;
+      min-height: 260px;
+      font-family: "Consolas", "SFMono-Regular", "Menlo", monospace;
+      font-size: 13px;
+      line-height: 1.38;
+      white-space: pre-wrap;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stack-right {
+      display: grid;
+      gap: 14px;
+    }
+
+    .small-box {
+      border: 2.5px solid var(--line);
+      background: var(--panel);
+      padding: 10px 16px 14px;
+      min-height: 128px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 21px;
+      line-height: 1.24;
+      letter-spacing: -0.03em;
+      white-space: pre-line;
+    }
+
+    .small-box.tight {
+      min-height: 108px;
+    }
+
+    .small-box .title {
+      display: block;
+      font-size: 26px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .hide {
+      display: none !important;
+    }
+
+    @media (max-width: 1360px), (max-height: 780px) {
+      .stage {
+        transform: scale(var(--scale, 1));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="stage" id="stage">
+      <div id="slide-root"></div>
+    </div>
+  </div>
+
+  <script>
+    const slides = [
+      {
+        layout: "title",
+        title: "AMEX",
+        subtitle: "Transaction Flow Analysis",
+        author: "작성자 : 성현진",
+        email: "tjdguswls01@titeng.co.kr"
+      },
+      {
+        layout: "cards2",
+        title: "범위",
+        cards: [
+          { title: "", items: ["카드가 선택된 이후 GPO부터 거래 종료까지의 처리 규칙","카드 Capability와 Reader Capability의 조합 판단","카드 데이터 읽기, ODA, CVM, Risk Management 수행"] },
+          { title: "", items: ["카드 Capability와 Reader Capability의 조합 판단","1st GENERATE AC의 AC Type 요청과 CID·AC·SDAD 응답 검증","Outcome, Data Record, UI Request 반환"] }
+        ],
+        note: "Kernel의 중심 역할은 카드와 Reader 조건을 해석해 올바른 거래 경로를 선택하는 것이다."
+      },
+      {
+        layout: "cards3",
+        title: "고유한 특징",
+        intro: "",
+        cards: [
+          { title: "Contactless Mode", items: ["1. EMV Mode", "2. Mag-Stripe Mode"] },
+          { title: "AMEX 특화 처리", items: ["1. Modified Terminal Type", "2. Enhanced Contactless Reader Capabilities", "3. Dynamic Reader Limits", "4. Contactless Mobile CVM", "5. CDOL Switch"] },
+          { title: "거래 완료 방식", items: ["1. Offline", "2. Partial Online", "3. Delayed Authorisation"] }
+        ],
+        note: "Kernel은 카드 Capability, Reader Capability, Reader Configuration을 해석해\n허용 가능한 Contactless Mode와 거래 경로를 결정한다."
+      },
+      {
+        layout: "flow3x3",
+        title: "전체 거래 흐름",
+        rows: [
+          ["GPO 및 Mode 결정", "Read Application Data", "Processing\nRestrictions"],
+          ["CVM / Mobile CVM", "Terminal Risk\nManagement","1st Terminal Action\nAnalysis"],
+          ["1st GENERATE AC", "1st Card Action\nAnalysis", "Offline / Online\nAuthorisation"]
+        ],
+        note: "TVR, TSI, CVM Results는 거래 중 누적되며,\n카드와 Reader 조건에 따라 다음 단계가 결정된다."
+      },
+      {
+        layout: "decisionTable",
+        title: "Contactless Mode 선택",
+        table: {
+          head: ["카드 지원 Mode", "Reader: EMV Only", "Reader: EMV + Mag-Stripe"],
+          body: [
+            ["Mag-Stripe Only", "Try Another Interface 또는 End Application", "Mag-Stripe Mode"],
+            ["EMV + Mag-Stripe", "EMV Mode", "EMV Mode"]
+          ]
+        },
+        side: ["판단 데이터", "AIP Byte 2 Bit 8", "Terminal Type 9F35", "Contactless Reader Capabilities 9F6D", "Enhanced Contactless Reader Capabilities 9F6E"],
+        note: "카드가 EMV Mode와 Mag-Stripe Mode를 모두 지원하고, Reader도 EMV Mode를 지원하면 EMV Mode 거래가 선택된다."
+      },
+      {
+        layout: "cards2",
+        title: "EMV Mode와 Mag-Stripe Mode",
+        cards: [
+          { title: "EMV Mode", items: ["1. AIP, AFL, CDOL, IAC, TAC 기반 처리", "2. SDA 또는 CDA 수행 가능", "3. TC, ARQC, AAC 기반의 EMV 거래", "4. EMV Data Record를 Host에 전달"] },
+          { title: "Mag-Stripe Mode", items: ["1. Dynamic Track Data 생성", "2. Track 1 / Track 2 Equivalent Data 사용", "3. CVC3와 Track Data를 반영", "4. Mag-Stripe 인증 흐름으로 처리"] }
+        ],
+        note: "EMV Mode는 EMV Data 기반 거래이고, Mag-Stripe Mode는 Dynamic Track Data 기반 거래다."
+      },
+      {
+        layout: "cards2",
+        title: "CDOL Switch",
+        cards: [
+          { title: "EMV Mode", items: ["1. Cryptogram Version 01", "2. EMV 거래에 필요한 CDOL 사용", "3. 일반 EMV Data Object를 기반으로 AC 생성"] },
+          { title: "Mag-Stripe Mode", items: ["1. Cryptogram Version 02", "2. CDOL 입력은 UN, ATC, CVR로 제한", "3. 생성된 AC와 CVC3를 Dynamic Track Data에 반영"] }
+        ],
+        note: "CDOL Switch는 AMEX Kernel에서 EMV Mode와 Mag-Stripe Mode를 실제 거래 데이터 수준에서 분리하는 장치다."
+      },
+      {
+        layout: "cards3",
+        title: "세 가지 거래 완료 방식",
+        cards: [
+          { title: "Offline", items: ["1. 카드와 Reader만으로 승인 또는 거절", "2. TC 또는 AAC 반환", "3. Online Processing 없음"] },
+          { title: "Partial Online", items: ["1. 1st GENERATE AC 이후 카드와 Reader 통신 종료", "2. ARQC와 Data Record를 Host로 전달", "3. Issuer Response로 최종 Approved 또는 Declined 결정"] },
+          { title: "Delayed Authorisation", items: ["1. 실시간 Online Authorisation이 불가능한 환경", "2. Partial Online 구조로 처리", "3. 카드 제거 후 후속 시점에 Issuer Authorisation 수행"] }
+        ],
+        note: "Online 구조는 Full Online이 아니라 Partial Online이다."
+      },
+      {
+        layout: "cards3",
+        title: "GPO는 거래의 시작점",
+        cards: [
+          { title: "Pre-PDOL Processing", items: ["1. Transaction Data 초기화", "2. 거래 금액, 통화, 거래 유형, 날짜, UN 준비", "3. Reader CVM Required 상태 확인"] },
+          { title: "PDOL Processing", items: ["1. 카드가 요청한 Tag 순서대로 값 연결", "2. PDOL이 없으면 83 00 사용", "3. 누락 데이터는 요구된 길이에 맞춰 채움"] },
+          { title: "GPO Response", items: ["1. AIP 수신", "2. AFL 수신", "3. Mode, Mobile Transaction 가능 여부 판단"] }
+        ],
+        note: "GPO는 Reader가 PDOL 데이터를 카드에 전달하고, 카드가 AIP·AFL·Mobile CVM Results를 반환하는 거래 시작 단계다."
+      },
+      {
+        layout: "cards2",
+        title: "Modified Terminal Type",
+        cards: [
+          { title: "기본 Terminal Type — 9F35", items: ["1. Online / Offline Capability", "2. Attended / Unattended 환경", "3. Terminal의 기본 거래 성격"] },
+          { title: "Contactless Reader Capabilities — 9F6D", items: ["1. EMV / Mag-Stripe 지원 여부", "2. CVM Required 여부"] }
+        ],
+        note: "Modified Terminal Type은 원본 9F35를 저장값 자체로 변경하는 것이 아니라, GPO Command에서 카드에 전달하는 거래용 파생값이다."
+      },
+      {
+        layout: "cards2",
+        title: "Enhanced Contactless Reader Capabilities",
+        cards: [
+          { title: "주요 역할", items: ["1. Reader가 지원하는 Contactless Mode 보완", "2. Mobile Transaction 관련 Capability 전달", "3. Delayed Authorisation 지원 표시", "4. CVM Required 상태, Contactless 특성 전달"] },
+          { title: "GPO에서의 의미", items: ["1. 카드가 9F6E를 PDOL에서 요청하면 Reader는 해당 거래 상태를 반영한 값을 제공", "2. AIP, Card Interface and Payment Capabilities, Reader Configuration과 함께 사용", "3. Mode·Mobile·Delayed Authorisation 지원 여부 판단에 사용"] }
+        ],
+        note: "9F6E는 단순 Capability Tag가 아니라, 거래별 Reader 상태를 카드에 알리는 핵심 입력이다."
+      },
+      {
+        layout: "cards3",
+        title: "AFL과 Read Application Data",
+        cards: [
+          { title: "READ RECORD로 수집하는 데이터", items: ["1. CDOL1, CVM List", "2. IAC, AUC, 유효기간", "3. Issuer / ICC 인증서", "4. Mag-Stripe Mode의 Track 2 Equivalent Data", "5. Track 1 / Track 2 Discretionary Data"] },
+          { title: "검증 항목", items: ["1. Response Template 70", "2. 필수 Tag 존재 여부", "3. Tag 중복 여부", "4. Tag 길이와 형식"] },
+          { title: "AFL이 지정하는 정보", items: ["1. SFI", "2. 시작 Record", "3. 종료 Record", "4. ODA 대상 Record 여부"] }
+        ],
+        note: "Read Application Data는 이후 ODA, CVM, Risk Management, Action Analysis의 입력을 준비하는 단계다."
+      },
+      {
+        layout: "cards3",
+        title: "Offline Data Authentication",
+        cards: [
+          { title: "SDA", items: ["1. 정적 Application Data의 서명 검증", "2. 카드 데이터 변조 여부 확인"] },
+          { title: "CDA", items: ["1. GENERATE AC의 SDAD 검증", "2. Dynamic Data와 AC를 서명", "3. 카드 인증과 거래 Cryptogram 검증 결합"] },
+          { title: "CAPK 체인", items: ["1. Scheme CA Public Key", "2. Issuer Public Key", "3. ICC Public Key", "4. 인증서, PAN, 유효기간, Hash, Revocation List 검증"] }
+        ],
+        note: "CDA는 READ RECORD로 수집한 인증서·정적 데이터와 1st GENERATE AC 응답의 SDAD를 결합해 카드와 거래를 함께 검증한다."
+      },
+      {
+        layout: "cards2",
+        title: "Dynamic Reader Limits",
+        cards: [
+          { title: "핵심 Limit", items: ["1. Reader Contactless Transaction Limit", "2. Reader CVM Required Limit", "3. Reader Contactless Floor Limit"] },
+          { title: "의미", items: ["1. Limit은 단순 금액 비교값이 아니다.", "2. AID, 거래 금액, 거래 유형, Terminal Configuration에 따라 결정된다.", "3. 선택된 Dynamic Limit Set이 거래 경로를 바꾼다."] }
+        ],
+        note: "Dynamic Reader Limits는 AMEX가 Contactless 거래 정책을 거래별로 적용하는 핵심 장치다."
+      },
+      {
+        layout: "cards3",
+        title: "Processing Restrictions",
+        cards: [
+          { title: "Application Version", items: ["1. 카드와 Terminal의 Application Version 비교", "2. 불일치 시 TVR 기록"] },
+          { title: "Application Usage Control", items: ["1. 국내 / 국제 거래", "2. ATM / 비ATM 환경", "3. 상품 / 서비스 / 현금 / Cashback 조건"] },
+          { title: "Application Dates", items: ["1. Transaction Date < Effective Date", "→ Application Not Yet Effective", "2. Transaction Date > Expiration Date", "→ Expired Application"] }
+        ],
+        note: "Processing Restrictions는 거래를 즉시 중단하는 단계라기보다, 카드 사용 조건 위반을 TVR에 기록해 이후 승인 판단에 반영하는 단계다."
+      },
+      {
+        layout: "cards3",
+        title: "AMEX Contactless CVM",
+        cards: [
+          { title: "판단 입력", items: ["1. Reader CVM Required Limit", "2. 카드 CVM List", "3. Reader Capability", "4. 거래 Mode", "5. Contactless Mobile 거래인 경우: Mobile CVM Results 9F71"] },
+          { title: "CVM 방식", items: ["1. No CVM", "2. Signature", "3. Enciphered Online PIN", "4. Contactless Mobile CVM"] },
+          { title: "결과 관리", items: ["1. CVM Results 9F34 설정", "2. TVR에 CVM 실패 상태 반영", "3. 다음 CVM Rule 또는 Action Analysis로 연결"] }
+        ],
+        note: "AMEX의 CVM은 단순 금액 기준이 아니라 카드가 제시한 CVM Rule과 Reader 조건을 함께 해석한 결과다."
+      },
+      {
+        layout: "cards3",
+        title: "Contactless Mobile CVM",
+        cards: [
+          { title: "Mobile CVM 특징", items: ["1. Mobile CVM은 카드에 저장된 Mobile CVM Code를", "   휴대폰에서 입력하고 카드가 VERIFY Command로 검증하는 방식이다.", "2. Reader는 CVM Code를 직접 검증하지 않고,", "   GPO 응답의 9F71 Mobile CVM Results를 해석한다."] },
+          { title: "9F71 해석 항목", items: ["1. Byte 1 — CVM Performed", "2. Byte 2 — CVM Condition", "3. Byte 3 — CVM Result"] },
+          { title: "Kernel 처리", items: ["9F71 미반환 → Mobile CVM 실패로 처리 후 다음 CVM Rule 검토", "9F71 Result = Blocked → Try Again 처리 가능"] }
+        ],
+        note: "Mobile CVM은 “휴대폰 인증 성공”만으로 끝나지 않고, Reader Limit과 Card CVM Rule을 함께 만족해야 한다."
+      },
+      {
+        layout: "cards3",
+        title: "Terminal Risk Management",
+        cards: [
+          { title: "Floor Limit Checking", items: ["1. Reader Contactless Floor Limit 초과 여부 확인", "2. 초과 시 TVR Byte 4 Bit 8 설정"] },
+          { title: "Exception File Checking", items: ["1. PAN, PAN Sequence Number, Expiry Date 기준 확인", "2. Hotlist 일치 시 TVR Byte 1 Bit 5 설정"] },
+          { title: "요구 사항", items: ["1. Random Transaction Selection은 수행하지 않음", "2. Velocity Checking은 수행하지 않음"] }
+        ],
+        note: "Contactless 환경 특성상 Random Selection과 Velocity Checking을 사용하지 않는다."
+      },
+      {
+        layout: "cards3",
+        title: "1st Terminal Action Analysis",
+        cards: [
+          { title: "입력 데이터", items: ["1. TVR", "2. IAC-Denial / Online / Default", "3. TAC-Denial / Online / Default", "4. Reader Configuration"] },
+          { title: "판단 결과", items: ["1. AAC 요청: 오프라인 거절", "2. TC 요청: 오프라인 승인", "3. ARQC 요청: Issuer Online Authorisation 요청"] },
+          { title: "Reader Configuration", items: ["1. Offline Only", "2. Online Only", "3. Offline with Online Capability", "4. Delayed Authorisation"] }
+        ],
+        note: "같은 TVR이라도 Reader Configuration이 다르면 Kernel의 AC 요청 결과도 달라진다."
+      },
+      {
+        layout: "cards3",
+        title: "1st Card Action Analysis",
+        cards: [
+          { title: "GENERATE AC 응답 핵심 데이터", items: ["1. CID", "2. ATC", "3. AC", "4. IAD", "5. CDA 사용 시 SDAD"] },
+          { title: "응답 의미", items: ["1. AAC: 카드 거절", "2. TC: 카드 오프라인 승인", "3. ARQC: Issuer Authorisation 필요"] },
+          { title: "Kernel 검증 사항", items: ["1. Response Template 형식", "2. CID와 Reader 요청값 정합성", "3. 필수 Tag 존재 여부", "4. CDA Signature 검증"] }
+        ],
+        note: "Reader는 AAC·TC·ARQC 중 하나를 요청하고, 카드는 Card Risk Management 결과에 따라 허용되는 범위 안에서 CID를 반환할 수 있다."
+      },
+      {
+        layout: "cards2",
+        title: "Partial Online Processing",
+        cards: [
+          { title: "EMV Mode Partial Online", items: ["1. 카드가 ARQC 반환", "2. Kernel이 Online Request Outcome 생성", "3. ARQC, ATC, IAD, TVR, 거래 Data를 Host 처리용 Data Record로 구성", "4. 카드 제거 안내", "5. Terminal이 Host로 Authorisation Request 전송"] },
+          { title: "핵심 규칙", items: ["1. 2nd GENERATE AC를 카드에 보내지 않음", "2. 카드가 RF Field를 떠난 뒤에도 Host Response 기반으로 거래 완료 가능"] }
+        ],
+        note: "Partial Online은 “ARQC를 받은 뒤 카드와의 Contactless 세션을 종료하는 구조”다."
+      },
+      {
+        layout: "cards2",
+        title: "Delayed Authorisation",
+        cards: [
+          { title: "사용 환경", items: ["1. 실시간 Online Authorisation이 불가능한 환경"] },
+          { title: "필수 조건", items: ["1. Delayed Authorisation Capability와 카드 지원 조건을 확인", "2. Partial Online 구조로 1st GENERATE AC 수행", "3. AAC가 아닌 경우 ODA 완료 여부 확인"] }
+        ],
+        note: "Delayed Authorisation은 Offline 거래가 아니라, Authorisation 시점만 뒤로 미루는 Partial Online 거래다."
+      },
+      {
+        layout: "cards2",
+        title: "Transaction Completion",
+        cards: [
+          { title: "주요 Outcome", items: ["1. Approved", "2. Declined", "3. Online Request", "4. Try Again", "5. End Application", "6. Try Another Interface", "7. Request Online PIN"] },
+          { title: "함께 전달되는 정보", items: ["1. Data Record", "2. Discretionary Data", "3. UI Request", "4. Receipt 필요 여부", "5. Field Off Request", "6. Removal Timeout", "7. Restart Start Parameter"] }
+        ],
+        note: "승인 여부뿐 아니라, Entry Point·UI·Host가 다음 동작을 수행할 수 있도록 Outcome Parameter와 Data Record를 반환한다."
+      },
+      {
+        layout: "tableOnly",
+        title: "핵심 APDU",
+        table: {
+          head: ["거래 단계", "APDU", "목적"],
+          body: [
+            ["거래 초기화", "GET PROCESSING OPTIONS", "PDOL 전달, AIP/AFL 수신"],
+            ["카드 데이터 수집", "READ RECORD", "AFL 기반 카드 데이터 읽기"],
+            ["선택 데이터 조회", "GET DATA", "ATC 등 특정 Data Object 조회"],
+            ["EMV Mode 승인 판단", "GENERATE AC", "AAC / TC / ARQC 생성 요청"],
+            ["Mag-Stripe Mode", "COMPUTE CRYPTOGRAPHIC CHECKSUM", "CVC3와 Dynamic Track Data 생성에 필요한 Cryptogram 처리"],
+            ["Mobile CVM", "VERIFY", "Mobile CVM Code를 카드가 검증"]
+          ]
+        },
+        note: "AMEX의 핵심은 APDU 개수보다, Mode와 거래 상태에 맞는 명령을 올바른 순서로 사용하는 것이다."
+      },
+      {
+        layout: "summary5",
+        title: "핵심 정리",
+        top: [
+          { title: "Dual Mode", text: "EMV Mode와 Mag-Stripe Mode를 지원한다." },
+          { title: "Partial Online", text: "ARQC 이후 카드와의 상호작용을 종료한다." },
+          { title: "Dynamic Limits", text: "Transaction, CVM, Floor Limit을 거래별로 선택한다." }
+        ],
+        bottom: [
+          { title: "Dynamic Capability", text: "PDOL 요청 조건에 따라 Modified Terminal Type 또는 9F6E로 거래별 Reader Capability와 상태를 카드에 전달한다." },
+          { title: "Outcome 중심 완료", text: "Approved·Declined뿐 아니라 UI·Host·재시작 정보를 함께 반환한다." }
+        ]
+      },
+      {
+        layout: "codeSplit2",
+        title: "offline / online / decline 방향을 고르는 코드",
+        code: [
+          "T_ActAnal = TerminalActAnalysis(FALSE);   // 단말 위험 관리 결과로 방향 결정",
+          "",
+          "if (T_ActAnal == 1)",
+          "{",
+          "  // 1 - 온라인 진행 필요 -> ARQC 요청",
+          "  if (certifyCDA == TRUE && dll_err == 0 && (stTerminal.tag_9F33[2] & 0x08) == 0x08)",
+          "  {",
+          "    SendGenerateAC(0x90, 1, icRetData, &icRetLen, pSW12); // ARQC + CDA",
+          "  }",
+          "  else",
+          "  {",
+          "    SendGenerateAC(0x80, 1, icRetData, &icRetLen, pSW12); // ARQC, Online",
+          "  }",
+          "}",
+          "else if (T_ActAnal == 2)",
+          "{",
+          "  // 2 - 오프라인 승인 가능 -> TC 요청",
+          "  if (certifyCDA == TRUE && dll_err == 0 && (stTerminal.tag_9F33[2] & 0x08) == 0x08)",
+          "  {",
+          "    SendGenerateAC(0x50, 1, icRetData, &icRetLen, pSW12); // TC + CDA",
+          "  }",
+          "  else",
+          "  {",
+          "    StrToCode(AuthRspCode, \"5931\", 4);",
+          "    SendGenerateAC(0x40, 1, icRetData, &icRetLen, pSW12); // TC, Offline approve",
+          "  }",
+          "}",
+          "else",
+          "{",
+          "  // 3 - 오프라인 거절 -> AAC 요청",
+          "  if (certifyCDA == TRUE && dll_err == 0 && (stTerminal.tag_9F33[2] & 0x08) == 0x08)",
+          "  {",
+          "    SendGenerateAC(0x10, 1, icRetData, &icRetLen, pSW12); // AAC + CDA",
+          "  }",
+          "  else",
+          "  {",
+          "    StrToCode(AuthRspCode, \"5A31\", 4);",
+          "    SendGenerateAC(0x00, 1, icRetData, &icRetLen, pSW12); // AAC, Offline decline",
+          "  }",
+          "}"
+        ],
+        rightBoxes: [
+          { title: "Online", text: "ARQC :\n단말이 온라인 승인 요청으로 넘기겠다는 의미" },
+          { title: "Offline", text: "TC :\n단말이 오프라인 승인으로 끝내고 싶다는 의미" }
+        ]
+      },
+      {
+        layout: "codeSplit1",
+        title: "offline / online / decline 방향을 고르는 코드",
+        code: [
+          "// 그 외 - 오프라인 거절 -> AAC 요청",
+          "if (certifyCDA == TRUE && dll_err == 0 && (stTerminal.tag_9F33[2] & 0x08) == 0x08)",
+          "{",
+          "  SendGenerateAC(0x10, 1, icRetData, &icRetLen, pSW12); // AAC + CDA",
+          "}",
+          "else",
+          "{",
+          "  StrToCode(AuthRspCode, \"5A31\", 4);      // 내부 거절 응답 코드 설정",
+          "  SendGenerateAC(0x00, 1, icRetData, &icRetLen, pSW12); // AAC, Offline decline",
+          "}"
+        ],
+        rightBox: { title: "Decline", text: "AAC :\n단말이 오프라인 거절로 끝내고 싶다는 의미" }
+      },
+      {
+        layout: "codeSplitBullet",
+        title: "카드 응답을 보고 거래 결과를 고르는 코드",
+        code: [
+          "if ((pGACrsp[2+k] & 0xF0) == 0x00)",
+          "{",
+          "  GACrsp = '1';   // AAC = 거래 거절",
+          "}",
+          "else if ((pGACrsp[2+k] & 0xF0) == 0x80)",
+          "{",
+          "  GACrsp = '2';   // ARQC = 온라인 승인 요청",
+          "}",
+          "else if ((pGACrsp[2+k] & 0xF0) == 0xC0)",
+          "{",
+          "  GACrsp = '3';   // AAR = 추가 승인/문의",
+          "}",
+          "else if ((pGACrsp[2+k] & 0xF0) == 0x40)",
+          "{",
+          "  GACrsp = '4';   // TC = 거래 완료",
+          "}"
+        ],
+        bullets: ["- `AAC` = 거절", "- `ARQC` = 온라인으로 보내야 함", "- `AAR` = 추가 문의/승인 필요", "- `TC` = 거래 완료"]
+      },
+      {
+        layout: "tableOnly",
+        title: "단말이 온라인 기능을 지원하는지 고르는 코드",
+        table: {
+          head: ["구분", "AAC", "TC", "ARQC"],
+          body: [
+            ["Terminal 요청", "Offline Decline", "Offline Approval", "Online Authorisation"],
+            ["Card CID 응답", "Declined", "Offline Approval 방향", "Issuer 검증 필요"],
+            ["대표 처리", "Declined Outcome", "Approved 가능", "Online Request Outcome"]
+          ]
+        },
+        note: ""
+      }
+    ];
+
+    const root = document.getElementById("slide-root");
+    const stage = document.getElementById("stage");
+    const BASE_W = 1280;
+    const BASE_H = 720;
+    let currentIndex = 0;
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;");
+    }
+
+    function linesToHtml(text) {
+      return escapeHtml(text).replaceAll("\n", "<br>");
+    }
+
+    function renderPanel(card, extraClass = "") {
+      const items = (card.items || []).map((item) => `<div class="item">${linesToHtml(item)}</div>`).join("");
+      return `
+        <div class="panel centered ${extraClass}">
+          <div class="panel-title ${card.boldTitle ? "bold" : ""}">${linesToHtml(card.title)}</div>
+          <div class="panel-items ${card.align === "center" ? "center" : "left"}">${items}</div>
+        </div>
+      `;
+    }
+
+    function renderTitle(slide) {
+      return `
+        <section class="slide title-slide">
+          <div class="top-rule"></div>
+          <div class="title-card">
+            <div class="slide-title">${escapeHtml(slide.title)}</div>
+            <div class="slide-subtitle">${escapeHtml(slide.subtitle)}</div>
+            <table class="author-table">
+              <tr>
+                <td class="author-name">${escapeHtml(slide.author)}</td>
+                <td>${escapeHtml(slide.email)}</td>
+              </tr>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderBulletHero(slide) {
+      const bullets = slide.bullets.map((bullet) => `<div class="bullet">${escapeHtml(bullet)}</div>`).join("");
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="bullet-stack">${bullets}</div>
+          <div class="note-box bottom-note">${escapeHtml(slide.note)}</div>
+        </section>
+      `;
+    }
+
+    function renderCards3(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          ${slide.intro ? `<div class="slide-subtitle" style="width: 980px; margin-left: auto; margin-right: auto; margin-top: 12px; font-size: 18px; line-height: 1.28;">${linesToHtml(slide.intro)}</div>` : ""}
+          <div class="three-col-note-layout">
+            ${slide.cards.map((card) => renderPanel(card)).join("")}
+          </div>
+          ${slide.note ? `<div class="note-box bottom-note">${linesToHtml(slide.note)}</div>` : ""}
+        </section>
+      `;
+    }
+
+    function renderCards2(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="two-col-note-layout">
+            ${slide.cards.map((card) => renderPanel(card, card.tight ? "tight" : "")).join("")}
+          </div>
+          ${slide.note ? `<div class="note-box bottom-note">${linesToHtml(slide.note)}</div>` : ""}
+        </section>
+      `;
+    }
+
+    function renderFlow3x3(slide) {
+      const arrows = (count, downIndex = -1) => {
+        const parts = [];
+        for (let i = 0; i < count; i++) {
+          parts.push(`<div class="flow-box">${linesToHtml(slide.rows[Math.floor(i / 2)][i % 2])}</div>`);
+        }
+        return parts.join("");
+      };
+
+      const rowHtml = slide.rows.map((row, rowIndex) => {
+        if (rowIndex === 0) {
+          return `
+            <div class="flow-grid">
+              <div class="flow-box">${linesToHtml(row[0])}</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-box">${linesToHtml(row[1])}</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-box">${linesToHtml(row[2])}</div>
+            </div>
+          `;
+        }
+        if (rowIndex === 1) {
+          return `
+            <div class="flow-grid">
+              <div class="flow-box">${linesToHtml(row[0])}</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-box">${linesToHtml(row[1])}</div>
+              <div class="flow-arrow"></div>
+              <div class="flow-box">${linesToHtml(row[2])}</div>
+            </div>
+          `;
+        }
+        return `
+          <div class="flow-grid">
+            <div class="flow-box">${linesToHtml(row[0])}</div>
+            <div class="flow-arrow"></div>
+            <div class="flow-box">${linesToHtml(row[1])}</div>
+            <div class="flow-arrow"></div>
+            <div class="flow-box">${linesToHtml(row[2])}</div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="flow-layout">
+            ${rowHtml}
+          </div>
+          <div class="note-box bottom-note">${linesToHtml(slide.note)}</div>
+        </section>
+      `;
+    }
+
+    function renderDecisionTable(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="decision-layout">
+            <table class="decision-table">
+              <thead>
+                <tr>${slide.table.head.map((head) => `<th>${escapeHtml(head)}</th>`).join("")}</tr>
+              </thead>
+              <tbody>
+                ${slide.table.body.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}
+              </tbody>
+            </table>
+            <div class="decision-side">
+              <span class="label">${escapeHtml(slide.side[0])}</span>
+              ${slide.side.slice(1).map((line) => `<div>${escapeHtml(line)}</div>`).join("")}
+            </div>
+          </div>
+          <div class="note-box bottom-note">${escapeHtml(slide.note)}</div>
+        </section>
+      `;
+    }
+
+    function renderLeftStackRightStack(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="code-layout" style="grid-template-columns: 1.05fr 0.95fr;">
+            <div class="panel tall">
+              <div class="panel-title">${escapeHtml(slide.left.title)}</div>
+              <div class="panel-items left">${slide.left.items.map((item) => `<div class="item">${linesToHtml(item)}</div>`).join("")}</div>
+            </div>
+            <div class="stack-right">
+              <div class="panel tight">
+                <div class="panel-title">${escapeHtml(slide.rightTop.title)}</div>
+                <div class="panel-items left">${slide.rightTop.items.map((item) => `<div class="item">${linesToHtml(item)}</div>`).join("")}</div>
+              </div>
+              <div class="panel tight">
+                <div class="panel-title">${escapeHtml(slide.rightBottom.title)}</div>
+                <div class="panel-items left">${slide.rightBottom.items.map((item) => `<div class="item">${linesToHtml(item)}</div>`).join("")}</div>
+              </div>
+            </div>
+          </div>
+          <div class="note-box bottom-note">${escapeHtml(slide.note)}</div>
+        </section>
+      `;
+    }
+
+    function renderSummary5(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="summary-grid">
+            ${slide.top.map((card) => `
+              <div class="summary-card">
+                <div class="title">${escapeHtml(card.title)}</div>
+                <div class="text">${linesToHtml(card.text)}</div>
+              </div>
+            `).join("")}
+          </div>
+          <div class="summary-grid bottom">
+            ${slide.bottom.map((card) => `
+              <div class="summary-card">
+                <div class="title">${escapeHtml(card.title)}</div>
+                <div class="text">${linesToHtml(card.text)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderTableOnly(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title small">${escapeHtml(slide.title)}</div>
+          <div class="table-layout">
+            <table class="main-table">
+              <thead>
+                <tr>${slide.table.head.map((head) => `<th>${escapeHtml(head)}</th>`).join("")}</tr>
+              </thead>
+              <tbody>
+                ${slide.table.body.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+          ${slide.note ? `<div class="note-box bottom-note">${escapeHtml(slide.note)}</div>` : ""}
+        </section>
+      `;
+    }
+
+    function renderCodeSplit2(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title xsmall">${escapeHtml(slide.title)}</div>
+          <div class="code-layout">
+            <pre class="code-box">${escapeHtml(slide.code.join("\n"))}</pre>
+            <div class="stack-right">
+              ${slide.rightBoxes.map((box) => `
+                <div class="small-box">
+                  <div>
+                    <span class="title">${escapeHtml(box.title)}</span><br>
+                    ${linesToHtml(box.text)}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderCodeSplit1(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title xsmall">${escapeHtml(slide.title)}</div>
+          <div class="code-layout two-right">
+            <pre class="code-box">${escapeHtml(slide.code.join("\n"))}</pre>
+            <div class="small-box">
+              <div>
+                <span class="title">${escapeHtml(slide.rightBox.title)}</span><br>
+                ${linesToHtml(slide.rightBox.text)}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderCodeSplitBullet(slide) {
+      return `
+        <section class="slide">
+          <div class="top-rule"></div>
+          <div class="slide-title xsmall">${escapeHtml(slide.title)}</div>
+          <div class="code-layout two-right">
+            <pre class="code-box">${escapeHtml(slide.code.join("\n"))}</pre>
+            <div class="small-box">
+              <div style="text-align:left; width:100%;">
+                ${slide.bullets.map((bullet) => `<div style="margin: 8px 0; font-size: 22px; line-height: 1.18;">${bullet}</div>`).join("")}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderSlide(slide) {
+      switch (slide.layout) {
+        case "title": return renderTitle(slide);
+        case "bulletHero": return renderBulletHero(slide);
+        case "cards3": return renderCards3(slide);
+        case "cards2": return renderCards2(slide);
+        case "flow3x3": return renderFlow3x3(slide);
+        case "decisionTable": return renderDecisionTable(slide);
+        case "leftStackRightStack": return renderLeftStackRightStack(slide);
+        case "summary5": return renderSummary5(slide);
+        case "tableOnly": return renderTableOnly(slide);
+        case "codeSplit2": return renderCodeSplit2(slide);
+        case "codeSplit1": return renderCodeSplit1(slide);
+        case "codeSplitBullet": return renderCodeSplitBullet(slide);
+        default: return `<section class="slide"><div class="top-rule"></div><div class="slide-title small">${escapeHtml(slide.title || "")}</div></section>`;
+      }
+    }
+
+    function showSlide(index) {
+      currentIndex = Math.max(0, Math.min(slides.length - 1, index));
+      root.innerHTML = renderSlide(slides[currentIndex]);
+      document.title = `AMEX ${currentIndex + 1}/${slides.length}`;
+    }
+
+    function updateScale() {
+      const scale = Math.min(window.innerWidth / BASE_W, window.innerHeight / BASE_H);
+      stage.style.setProperty("--scale", String(scale));
+      stage.style.transform = `scale(${scale})`;
+    }
+
+    window.__amexDeck = {
+      goTo(index) {
+        showSlide(index);
+      },
+      next() {
+        showSlide(currentIndex + 1);
+      },
+      prev() {
+        showSlide(currentIndex - 1);
+      },
+      get index() {
+        return currentIndex;
+      },
+      get total() {
+        return slides.length;
+      }
+    };
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        showSlide(currentIndex - 1);
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        showSlide(currentIndex + 1);
+      }
+    });
+
+    function syncFromLocation() {
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = Number.parseInt(params.get("slide") || "", 10);
+      if (Number.isFinite(fromQuery) && fromQuery >= 1 && fromQuery <= slides.length) {
+        showSlide(fromQuery - 1);
+        return;
+      }
+      const raw = window.location.hash.replace("#", "").trim();
+      const parsed = Number.parseInt(raw, 10);
+      if (Number.isFinite(parsed) && parsed >= 1 && parsed <= slides.length) {
+        showSlide(parsed - 1);
+      }
+    }
+
+    window.addEventListener("resize", updateScale);
+    window.addEventListener("hashchange", syncFromLocation);
+    updateScale();
+    syncFromLocation();
+    if (!window.location.hash && !new URLSearchParams(window.location.search).has("slide")) {
+      showSlide(0);
+    }
+  </script>
+</body>
+</html>

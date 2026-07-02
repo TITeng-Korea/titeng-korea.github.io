@@ -1,51 +1,22 @@
 // 기술 포스트 데이터 (index.html 과 posts/article.html 에서 공동 참조)
 const techArticles = [
     {
-        id: 5,
-        title: "tPay NFC Android/iOS SDK를 10분 만에 연동하여 승인 결제 처리하는 방법",
-        category: "sw",
-        categoryKo: "S/W & 결제 플랫폼",
-        badgeClass: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-sky-300 border border-blue-200 dark:border-blue-900",
-        author: "김준우 수석연구원 (TPay 핀테크팀)",
-        date: "2026.06.12",
-        readTime: "읽는 시간 10분",
-        summary: "모바일 단말기 및 리더기 장치를 활용하여 터치 결제를 도입해야 하는 앱 연동 엔지니어를 위해, 최신 tPay SDK 세팅부터 비접촉 EMV 리더 연동, 오프라인 큐 처리까지 실무 코드를 위주로 기술합니다.",
-        tags: ["NFC", "tPay", "AndroidSDK", "iOS", "API"],
+        id: 1,
+        title: "TITeng 연구소의 Git 기반 협업 및 무결성 CI/CD 파이프라인 정착 과정",
+        category: "culture",
+        categoryKo: "엔지니어링 문화",
+        badgeClass: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-900",
+        author: "황태준 팀장 (R&D DevOps 엔지니어)",
+        date: "2026.05.02",
+        readTime: "읽는 시간 9분",
+        summary: "제조 기반 기업에서 전통적인 펌웨어 소스 관리 모델을 탈피하여, 자동화 빌드 파이프라인 및 가상 시뮬레이터 테스트 코드를 활용해 제품 개발 기간을 단축한 실무 혁신기를 전달합니다.",
+        tags: ["DevOps", "CI_CD", "Git", "EmbeddedSimulator", "Culture"],
         content: `
-            <h3>들어가며: 모바일 핀테크 연동의 고충</h3>
-            <p>기존의 모바일 임베디드 결제 모듈 연동은 리더기의 장치 직렬 제어 프로토콜(RS-232, USB Serial) 및 암호화 인증 키 교환 방식의 복잡함으로 인해 높은 초기 장벽이 있었습니다. <strong>tPay NFC SDK</strong>는 이러한 과정을 추상화하여, 모바일 개발자가 단 몇 줄의 단순 메서드 호출만으로 카드 결제 승인 신호를 수신하고 처리할 수 있게 설계되었습니다.</p>
+            <h3>전통 임베디드 펌웨어 관리의 문제점 해결</h3>
+            <p>기존 하드웨어 개발 연구실에서는 펌웨어 개발 완료 후 디바이스가 연결된 실물 기판에 직접 JTAG을 꽂고 일일이 전원을 켜서 테스트하는 수동 디버깅 방식이 대다수였습니다. TITeng 소프트웨어 개발실은 하드웨어 종속성을 추상화하는 가상 기기 가상화(Mock Board)를 구축하고 Git 저장소의 커밋 발생 시 빌드가 유효한지 검증하는 CI/CD 테스트 환경을 이식했습니다.</p>
 
-            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-sky-400">
-                <strong>핵심 요구 사양</strong><br>
-                - iOS: Swift 5.5 이상, iOS 14 이상 필수 (CoreNFC 프레임워크 허용 모델)<br>
-                - Android: Kotlin 1.6 이상, SDK Level 24 (Nougat) 이상 지원
-            </div>
-
-            <h3>1단계: SDK 라이브러리 디펜던시 추가</h3>
-            <p>Android 스튜디오 프로젝트의 <code>build.gradle.kts</code> (Module 레벨) 파일에 아래 원격 Maven 저장소 주소와 라이브러리 참조를 선언합니다.</p>
-            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>dependencies {
-    implementation("com.tpay.nfc:sdk-core:4.0.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
-}</code></pre>
-
-            <h3>2단계: 결제 클라이언트 설정 및 리스너 등록</h3>
-            <p>애플리케이션 컨텍스트를 주입하고 가맹점 식별 ID를 지정하여 클라이언트를 생성합니다. 이후 NFC Tag 수집 이벤트를 처리할 리스너를 실행해 줍니다.</p>
-            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>val tpayClient = TPayClient.Builder()
-    .setMerchantId("TIT_MERCHANT_ID")
-    .setSecureMode(true) // AES-256 종단간 데이터 보안 모드 활성화
-    .build(context)
-
-// NFC 센서 상시 감지 상태로 전환
-tpayClient.enableNfcSensor(activity) { tagState ->
-    when(tagState) {
-        TagState.DETECTED -> showLoadingIndicator()
-        TagState.READ_SUCCESS -> playBeepSound()
-        TagState.FAILURE -> handleError()
-    }
-}</code></pre>
-
-            <h3>오프라인 처리 및 오류 복구 메커니즘</h3>
-            <p>결제 도중 일시적인 LTE/5G 신호 유실 등의 불안정한 상황에서도 결제 전문의 무결성을 유지하기 위해 SDK 내부에 오프라인 트랜잭션 큐 알고리즘을 적용했습니다. 네트워크 순시 탈락 시 승인 대기 데이터는 안전한 메모리 내 큐 구조(AES 암호화 상태)로 보관되며, 가용한 네트워크 연결이 다시 감지될 때까지 최대 5회 자동 재시도($\text{Retry Interval} = 2.0\text{sec}$)를 수행합니다.</p>
+            <h3>효과 및 미래 비전</h3>
+            <p>이를 통해 실제 배포 이전에 일어날 수 있는 메모리 누수(OOM), 변수 오버플로우 등의 사소한 버그를 사전에 85% 이상 정적 분석 단계에서 스크리닝할 수 있게 되었습니다. 펌웨어 배포 역시 클라우드 저장소를 거쳐 파트너 개발자가 드라이버 다운로드 센터에서 실시간으로 받도록 파이프라인을 완전히 연동 통합하였습니다.</p>
         `
     },
     {
@@ -126,29 +97,107 @@ tpayClient.enableNfcSensor(activity) { tagState ->
         `
     },
     {
-        id: 1,
-        title: "TITeng 연구소의 Git 기반 협업 및 무결성 CI/CD 파이프라인 정착 과정",
-        category: "culture",
-        categoryKo: "엔지니어링 문화",
-        badgeClass: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-900",
-        author: "황태준 팀장 (R&D DevOps 엔지니어)",
-        date: "2026.05.02",
-        readTime: "읽는 시간 9분",
-        summary: "제조 기반 기업에서 전통적인 펌웨어 소스 관리 모델을 탈피하여, 자동화 빌드 파이프라인 및 가상 시뮬레이터 테스트 코드를 활용해 제품 개발 기간을 단축한 실무 혁신기를 전달합니다.",
-        tags: ["DevOps", "CI_CD", "Git", "EmbeddedSimulator", "Culture"],
+        id: 5,
+        title: "tPay NFC Android/iOS SDK를 10분 만에 연동하여 승인 결제 처리하는 방법",
+        category: "sw",
+        categoryKo: "S/W & 결제 플랫폼",
+        badgeClass: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-sky-300 border border-blue-200 dark:border-blue-900",
+        author: "김준우 수석연구원 (TPay 핀테크팀)",
+        date: "2026.06.12",
+        readTime: "읽는 시간 10분",
+        summary: "모바일 단말기 및 리더기 장치를 활용하여 터치 결제를 도입해야 하는 앱 연동 엔지니어를 위해, 최신 tPay SDK 세팅부터 비접촉 EMV 리더 연동, 오프라인 큐 처리까지 실무 코드를 위주로 기술합니다.",
+        tags: ["NFC", "tPay", "AndroidSDK", "iOS", "API"],
         content: `
-            <h3>전통 임베디드 펌웨어 관리의 문제점 해결</h3>
-            <p>기존 하드웨어 개발 연구실에서는 펌웨어 개발 완료 후 디바이스가 연결된 실물 기판에 직접 JTAG을 꽂고 일일이 전원을 켜서 테스트하는 수동 디버깅 방식이 대다수였습니다. TITeng 소프트웨어 개발실은 하드웨어 종속성을 추상화하는 가상 기기 가상화(Mock Board)를 구축하고 Git 저장소의 커밋 발생 시 빌드가 유효한지 검증하는 CI/CD 테스트 환경을 이식했습니다.</p>
+            <h3>들어가며: 모바일 핀테크 연동의 고충</h3>
+            <p>기존의 모바일 임베디드 결제 모듈 연동은 리더기의 장치 직렬 제어 프로토콜(RS-232, USB Serial) 및 암호화 인증 키 교환 방식의 복잡함으로 인해 높은 초기 장벽이 있었습니다. <strong>tPay NFC SDK</strong>는 이러한 과정을 추상화하여, 모바일 개발자가 단 몇 줄의 단순 메서드 호출만으로 카드 결제 승인 신호를 수신하고 처리할 수 있게 설계되었습니다.</p>
 
-            <h3>효과 및 미래 비전</h3>
-            <p>이를 통해 실제 배포 이전에 일어날 수 있는 메모리 누수(OOM), 변수 오버플로우 등의 사소한 버그를 사전에 85% 이상 정적 분석 단계에서 스크리닝할 수 있게 되었습니다. 펌웨어 배포 역시 클라우드 저장소를 거쳐 파트너 개발자가 드라이버 다운로드 센터에서 실시간으로 받도록 파이프라인을 완전히 연동 통합하였습니다.</p>
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-sky-400">
+                <strong>핵심 요구 사양</strong><br>
+                - iOS: Swift 5.5 이상, iOS 14 이상 필수 (CoreNFC 프레임워크 허용 모델)<br>
+                - Android: Kotlin 1.6 이상, SDK Level 24 (Nougat) 이상 지원
+            </div>
+
+            <h3>1단계: SDK 라이브러리 디펜던시 추가</h3>
+            <p>Android 스튜디오 프로젝트의 <code>build.gradle.kts</code> (Module 레벨) 파일에 아래 원격 Maven 저장소 주소와 라이브러리 참조를 선언합니다.</p>
+            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>dependencies {
+    implementation("com.tpay.nfc:sdk-core:4.0.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+}</code></pre>
+
+            <h3>2단계: 결제 클라이언트 설정 및 리스너 등록</h3>
+            <p>애플리케이션 컨텍스트를 주입하고 가맹점 식별 ID를 지정하여 클라이언트를 생성합니다. 이후 NFC Tag 수집 이벤트를 처리할 리스너를 실행해 줍니다.</p>
+            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>val tpayClient = TPayClient.Builder()
+    .setMerchantId("TIT_MERCHANT_ID")
+    .setSecureMode(true) // AES-256 종단간 데이터 보안 모드 활성화
+    .build(context)
+
+// NFC 센서 상시 감지 상태로 전환
+tpayClient.enableNfcSensor(activity) { tagState ->
+    when(tagState) {
+        TagState.DETECTED -> showLoadingIndicator()
+        TagState.READ_SUCCESS -> playBeepSound()
+        TagState.FAILURE -> handleError()
+    }
+}</code></pre>
+
+            <h3>오프라인 처리 및 오류 복구 메커니즘</h3>
+            <p>결제 도중 일시적인 LTE/5G 신호 유실 등의 불안정한 상황에서도 결제 전문의 무결성을 유지하기 위해 SDK 내부에 오프라인 트랜잭션 큐 알고리즘을 적용했습니다. 네트워크 순시 탈락 시 승인 대기 데이터는 안전한 메모리 내 큐 구조(AES 암호화 상태)로 보관되며, 가용한 네트워크 연결이 다시 감지될 때까지 최대 5회 자동 재시도($\text{Retry Interval} = 2.0\text{sec}$)를 수행합니다.</p>
         `
     },
     {
         id: 16,
+        title: "Git 명령어 20가지: 명령어에서 AI 프롬프트로",
+        category: "report",
+        categoryKo: "AI 엔지니어링",
+        badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
+        author: "성현진 엔지니어 (모듈개발팀)",
+        date: "2026.06.19",
+        readTime: "읽는 시간 8분",
+        summary: "git status부터 cherry-pick까지 20개 Git 명령어를 기존 CLI 사용법과 AI 에이전트 프롬프트 작성법으로 나란히 비교한 발표용 슬라이드입니다.",
+        tags: ["Git", "AI", "Prompt", "CLI", "Slides"],
+        content: `
+            <h3>포스트 소개</h3>
+            <p>이 슬라이드는 Git 명령어를 단순히 외우는 자료가 아니라, AI 에이전트를 쓰기 전에는 명령어를 어떻게 직접 실행했고 지금은 같은 작업을 어떤 프롬프트로 요청해야 하는지 비교합니다. 핵심은 명령어를 없애는 것이 아니라 목표, 범위, 안전 조건, 검증 기준을 더 정확히 전달하는 것입니다.</p>
+
+            <h3>Before / Now 관점</h3>
+            <ul>
+                <li><strong>Before</strong>: 명령어와 옵션을 직접 조합하고 출력 결과를 사람이 읽은 뒤 다음 명령을 결정했습니다.</li>
+                <li><strong>Now</strong>: AI 에이전트에게 목표와 제약을 말하고, 에이전트가 실행한 명령과 diff, 테스트 결과를 사람이 검토합니다.</li>
+                <li><strong>좋은 프롬프트</strong>: 어떤 작업을 할지, 어떤 파일을 건드려도 되는지, 위험하면 어디서 멈출지를 포함합니다.</li>
+                <li><strong>마지막 책임</strong>: commit, push, reset 같은 변경 작업은 에이전트 결과를 확인한 뒤 승인하는 흐름이 안전합니다.</li>
+            </ul>
+
+            <h3>다루는 Git 명령어 20가지</h3>
+            <ul>
+                <li><strong>상태와 변경 검토</strong>: <code>git status</code>, <code>git diff</code></li>
+                <li><strong>커밋 구성</strong>: <code>git add</code>, <code>git commit</code></li>
+                <li><strong>브랜치 작업</strong>: <code>git branch</code>, <code>git switch</code>, <code>git checkout</code></li>
+                <li><strong>원격 동기화</strong>: <code>git fetch</code>, <code>git pull</code>, <code>git push</code></li>
+                <li><strong>기록 확인과 복구</strong>: <code>git log</code>, <code>git restore</code>, <code>git reset</code></li>
+                <li><strong>통합과 이력 정리</strong>: <code>git merge</code>, <code>git rebase</code>, <code>git cherry-pick</code></li>
+                <li><strong>작업 보관과 저장소 관리</strong>: <code>git stash</code>, <code>git remote</code>, <code>git clone</code>, <code>git tag</code></li>
+            </ul>
+
+            <h3>프롬프트 예시</h3>
+            <ul>
+                <li><strong>status</strong>: 현재 저장소 상태를 확인하고 수정/추가/삭제/추적 제외 파일을 표로 요약해줘.</li>
+                <li><strong>diff</strong>: 아직 커밋하지 않은 변경을 의도된 변경, 위험한 변경, 확인 질문으로 나눠 요약해줘.</li>
+                <li><strong>add</strong>: 이번 커밋 목적과 관련된 변경만 stage하고, 제외한 파일과 이유를 알려줘.</li>
+                <li><strong>pull</strong>: 원격 변경을 반영하되 충돌이 나면 자동 커밋하지 말고 충돌 파일과 해결 방향을 먼저 보고해줘.</li>
+                <li><strong>reset</strong>: soft, mixed, hard 차이를 설명하고 작업 손실 가능성이 있으면 실행 전 멈춰줘.</li>
+            </ul>
+
+            <a href="./ai-coding/git-commands.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+        `
+    },
+    {
+        id: 17,
         title: "AI 시대의 Git 활용법 with VSCode",
         category: "report",
-        categoryKo: "기술 리포트",
+        categoryKo: "AI 엔지니어링",
         badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
         author: "성현진 엔지니어 (모듈개발팀)",
         date: "2026.06.18",
@@ -220,17 +269,17 @@ git revert &lt;commit-hash&gt;</code></pre>
                 <li>되돌릴 가능성이 있는 작업일수록 브랜치와 작은 커밋 단위가 중요합니다.</li>
             </ul>
 
-            <a href="../topic2/topic2.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <a href="./ai-coding/github.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
         `
     },
     {
-        id: 17,
+        id: 18,
         title: "Google Antigravity IDE: 에이전트 중심 개발의 실제",
         category: "report",
-        categoryKo: "기술 리포트",
+        categoryKo: "AI 엔지니어링",
         badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
         author: "성현진 엔지니어 (모듈개발팀)",
         date: "2026.06.18",
@@ -280,22 +329,22 @@ git revert &lt;commit-hash&gt;</code></pre>
             <h3>결론</h3>
             <p>에이전트 중심 개발에서 중요한 능력은 코드를 더 빨리 생성하는 것이 아니라, 작업을 작게 분해하고 최소 권한을 설정하며 에이전트가 남긴 증거를 검토하는 능력입니다. 도구의 우열보다 팀의 저장소, 보안 정책, 리뷰 방식에 맞는 기본 작업 흐름을 선택해야 합니다.</p>
 
-            <a href="../topic3/topic3.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <a href="./ai-coding/antigravity.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
         `
     },
     {
-        id: 18,
+        id: 19,
         title: "코덱스 플러그인 사용과 CLI 코딩",
         category: "report",
-        categoryKo: "기술 리포트",
+        categoryKo: "AI 엔지니어링",
         badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
         author: "성현진 엔지니어 (모듈개발팀)",
         date: "2026.06.18",
         readTime: "읽는 시간 20분",
-        summary: "Codex Plugins, Skills, Hooks, MCP, Image Gen을 중심으로 CLI 기반 AI 코딩 workflow와 Copilot CLI, Claude Code, Codex CLI의 선택 기준을 정리한 기술 리포트입니다.",
+        summary: "Codex Plugins, Skills, Hooks, MCP, Image Gen을 중심으로 CLI 기반 AI 코딩 workflow와 Copilot CLI, Claude Code, Codex CLI의 선택 기준을 정리한 AI 엔지니어링 포스트입니다.",
         tags: ["Codex", "CLI Coding", "Plugins", "MCP", "Claude Code", "Copilot CLI"],
         content: `
             <h3>리포트 개요</h3>
@@ -326,7 +375,7 @@ git revert &lt;commit-hash&gt;</code></pre>
                 <li>도구 선택보다 중요한 것은 계획, 검증, 권한 관리가 포함된 운영 workflow입니다.</li>
             </ul>
 
-            <a href="../topic4/topic4.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <a href="./ai-coding/cli.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
@@ -334,21 +383,21 @@ git revert &lt;commit-hash&gt;</code></pre>
     },
     {
         id: 20,
-        title: "Visa Kernel 3: EMV Contactless Book C-3 거래 흐름 완전 분석",
+        title: "VISA Kernel 거래 흐름 완전 분석",
         category: "security",
         categoryKo: "보안 및 인증 규격",
         badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900",
         author: "성현진 연구원 (모듈개발팀)",
         date: "2026.06.25",
         readTime: "읽는 시간 20분",
-        summary: "Visa Kernel 3(qVSDC) 비접촉 거래의 전체 흐름을 처음부터 끝까지 분석합니다. TTQ, CTQ, GPO, fDDA, Outcome 개념과 실제 펌웨어 코드(EMV_PROC.C, NFC_Control.c)의 연결점을 함께 살펴봅니다.",
-        tags: ["Visa", "Kernel3", "qVSDC", "EMV", "Contactless", "TTQ", "CTQ", "fDDA"],
+        summary: "VISA Kernel(qVSDC) 비접촉 거래의 전체 흐름을 처음부터 끝까지 분석합니다. TTQ, CTQ, GPO, fDDA, Outcome 개념과 실제 펌웨어 코드(EMV_PROC.C, NFC_Control.c)의 연결점을 함께 살펴봅니다.",
+        tags: ["VISA", "Kernel", "qVSDC", "EMV", "Contactless", "TTQ", "CTQ", "fDDA"],
         content: `
-            <h3>Visa Kernel 3란</h3>
-            <p>Kernel 3는 Visa contactless 거래에서 리더가 카드 응답을 해석하고 다음 동작을 결정하는 L2 로직입니다. qVSDC 처리와 EMV contactless 요구사항을 함께 담고 있으며, 카드 응답을 해석해 거래의 다음 단계를 정하는 핵심 엔진입니다.</p>
+            <h3>VISA Kernel이란</h3>
+            <p>VISA contactless 거래에서 리더가 카드 응답을 해석하고 다음 동작을 결정하는 L2 로직입니다. qVSDC 처리와 EMV contactless 요구사항을 함께 담고 있으며, 카드 응답을 해석해 거래의 다음 단계를 정하는 핵심 엔진입니다.</p>
 
             <h3>거래 흐름 전체 구조</h3>
-            <p>Kernel 3의 거래 흐름은 다섯 단계로 이어집니다.</p>
+            <p>VISA Kernel의 거래 흐름은 다섯 단계로 이어집니다.</p>
             <ol>
                 <li><strong>입력 수집</strong>: 금액, 통화, 거래일, 거래형태, Unpredictable Number를 정확히 준비합니다. 9F02, 5F2A, 9C, 9A, 9F37 같은 초기값은 카드 판정의 재료가 되므로 단순 설정이 아니라 거래 의미를 담는 값입니다.</li>
                 <li><strong>앱 선택</strong>: PPSE로 후보 AID를 수집하고, SELECT AID 후 FCI와 PDOL을 받아 거래용 입력 구조를 결정합니다.</li>
@@ -370,7 +419,7 @@ if(check_9F10() == 0x10) {
 }</code></pre>
 
             <h3>GPO: 거래의 분기점</h3>
-            <p>GPO(Get Processing Options)는 Kernel 3의 핵심 분기점입니다. PDOL로 정의된 입력을 채워 카드에 전달하면, 카드는 AIP와 AFL을 응답합니다. SW1 SW2가 6984·6985·6986이면 각각 Try Another Interface, Select Next, Try Again 분기가 발생합니다.</p>
+            <p>GPO(Get Processing Options)는 Kernel의 핵심 분기점입니다. PDOL로 정의된 입력을 채워 카드에 전달하면, 카드는 AIP와 AFL을 응답합니다. SW1 SW2가 6984·6985·6986이면 각각 Try Another Interface, Select Next, Try Again 분기가 발생합니다.</p>
 
             <h3>코드 연결: 핵심 파일 구조</h3>
             <ul>
@@ -389,31 +438,51 @@ bool EmvTranProc(BYTE Cmd_code, BYTE *pCmd, UINT nCmdlen, BYTE *pRsp, UINT *nRsp
     }
 }</code></pre>
 
-            <a href="../kernel/visa.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <div class="mt-10 mb-6 p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">핵심 약어 정리</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">qVSDC</code> — Quick VISA Smart Debit/Credit, VISA 비접촉 거래 프로토콜</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">L2</code> — Layer 2, 카드 애플리케이션 처리 레이어 (ISO 7816 기준)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PPSE</code> — Proximity Payment System Environment, 비접촉 결제 앱 목록 파일</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AID</code> — Application Identifier, 카드 내 애플리케이션 식별자</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">FCI</code> — File Control Information, SELECT 응답의 파일 제어 정보</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PDOL</code> — Processing Options Data Object List, GPO 수행 전 요구 단말 데이터 목록</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">GPO</code> — Get Processing Options, 카드에 거래 처리 옵션 요청하는 APDU 커맨드</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AIP</code> — Application Interchange Profile, 카드 지원 기능 플래그 2바이트</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AFL</code> — Application File Locator, READ RECORD로 읽을 파일·레코드 위치 목록</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">fDDA</code> — Fast Dynamic Data Authentication, VISA 방식의 빠른 동적 인증</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TTQ</code> — Terminal Transaction Qualifiers, 리더 지원 기능 선언 4바이트</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CTQ</code> — Card Transaction Qualifiers, 카드가 요구하는 처리 조건</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CVM</code> — Cardholder Verification Method, 카드 소지자 인증 방식 (서명·PIN·No CVM 등)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TVR</code> — Terminal Verification Results, 각 검증 결과를 저장하는 5바이트 플래그</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">APDU</code> — Application Protocol Data Unit, 카드와 리더 간 통신 데이터 단위</div>
+                </div>
+            </div>
+            <a href="./kernel/visa.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
         `
     },
     {
-        id: 23,
-        title: "Amex Kernel 4: EMV Contactless Book C-4 거래 흐름 완전 분석",
+        id: 21,
+        title: "AMEX Kernel 거래 흐름 완전 분석",
         category: "security",
         categoryKo: "보안 및 인증 규격",
         badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900",
         author: "성현진 연구원 (모듈개발팀)",
         date: "2026.06.25",
         readTime: "읽는 시간 18분",
-        summary: "American Express Kernel 4(ExpressPay) 비접촉 거래의 전체 흐름을 처음부터 끝까지 분석합니다. PDOL, GPO, AIP/AFL, ODA, AC 요청·판정, CVM 처리, Outcome 결정 개념과 Visa·Mastercard 커널과의 주요 차이점을 함께 살펴봅니다.",
-        tags: ["Amex", "Kernel4", "ExpressPay", "EMV", "Contactless", "AEIPS", "AC", "ODA"],
+        summary: "American Express Kernel(ExpressPay) 비접촉 거래의 전체 흐름을 처음부터 끝까지 분석합니다. PDOL, GPO, AIP/AFL, ODA, AC 요청·판정, CVM 처리, Outcome 결정 개념과 VISA·Mastercard 커널과의 주요 차이점을 함께 살펴봅니다.",
+        tags: ["AMEX", "Kernel", "ExpressPay", "EMV", "Contactless", "AEIPS", "AC", "ODA"],
         content: `
-            <h3>Amex Kernel 4란</h3>
-            <p>Kernel 4는 EMVCo Book C-4에 정의된 American Express 비접촉 거래의 L2 로직입니다. American Express의 ExpressPay 및 AEIPS(American Express Integrated Circuit Card Specification) 기반 카드와의 거래에서 리더기가 카드 응답을 해석하고 승인·거절·온라인 요청 여부를 결정하는 핵심 엔진입니다. Visa Kernel 3, Mastercard Kernel 2와 거래 흐름의 큰 틀은 유사하지만 PDOL 구성, CVM 처리, Outcome 결정 방식에서 Amex 고유의 차이가 존재합니다.</p>
+            <h3>AMEX Kernel이란</h3>
+            <p>American Express 비접촉 거래의 L2 로직입니다. American Express의 ExpressPay 및 AEIPS(American Express Integrated Circuit Card Specification) 기반 카드와의 거래에서 리더기가 카드 응답을 해석하고 승인·거절·온라인 요청 여부를 결정하는 핵심 엔진입니다. VISA Kernel, Mastercard Kernel과 거래 흐름의 큰 틀은 유사하지만 PDOL 구성, CVM 처리, Outcome 결정 방식에서 Amex 고유의 차이가 존재합니다.</p>
 
             <h3>거래 흐름 전체 개요</h3>
-            <p>Kernel 4 거래는 크게 다음 단계로 구성됩니다.</p>
+            <p>거래는 크게 다음 단계로 구성됩니다.</p>
             <ol>
-                <li><strong>Entry Point → Kernel 4 선택</strong>: 리더가 카드 AID를 읽고 Amex AID(<code>A0 00 00 00 25 01 07</code> 등)를 확인한 뒤 Kernel 4를 활성화합니다.</li>
+                <li><strong>Entry Point → AMEX Kernel선택</strong>: 리더가 카드 AID를 읽고 Amex AID(<code>A0 00 00 00 25 01 07</code> 등)를 확인한 뒤 Kernel을 활성화합니다.</li>
                 <li><strong>PDOL 처리 및 GPO</strong>: 카드가 요구하는 단말 데이터를 PDOL로 수집해 <code>GET PROCESSING OPTIONS</code>(GPO) 커맨드를 전송합니다.</li>
                 <li><strong>AIP / AFL 수신</strong>: GPO 응답에서 AIP(지원 기능 플래그)와 AFL(읽을 파일 목록)을 파싱합니다.</li>
                 <li><strong>레코드 읽기(READ RECORD)</strong>: AFL에 명시된 모든 레코드를 순서대로 읽어 카드 데이터를 수집합니다.</li>
@@ -428,7 +497,7 @@ bool EmvTranProc(BYTE Cmd_code, BYTE *pCmd, UINT nCmdlen, BYTE *pRsp, UINT *nRsp
             </ol>
 
             <h3>Amex AID와 커널 식별</h3>
-            <p>American Express는 여러 AID를 운용합니다. Entry Point에서 카드 응답의 AID를 읽어 Kernel 4를 선택합니다.</p>
+            <p>American Express는 여러 AID를 운용합니다. Entry Point에서 카드 응답의 AID를 읽어 Kernel을 선택합니다.</p>
             <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
                 <strong>주요 Amex AID</strong><br>
                 - <code>A0 00 00 00 25 01 07</code>: American Express Credit<br>
@@ -438,7 +507,7 @@ bool EmvTranProc(BYTE Cmd_code, BYTE *pCmd, UINT nCmdlen, BYTE *pRsp, UINT *nRsp
             </div>
 
             <h3>PDOL과 GPO 처리</h3>
-            <p>Kernel 4의 PDOL은 Amex 특유의 태그를 포함할 수 있습니다. 단말은 PDOL에 명시된 각 태그 값을 채워 GPO 커맨드 데이터로 전송합니다.</p>
+            <p>Kernel의 PDOL은 Amex 특유의 태그를 포함할 수 있습니다. 단말은 PDOL에 명시된 각 태그 값을 채워 GPO 커맨드 데이터로 전송합니다.</p>
             <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// GET PROCESSING OPTIONS APDU 구성 예시
 // 주요 PDOL 태그: 9F66(TTQ,4B) 9F02(금액,6B) 9F03(기타금액,6B)
 //               9F1A(국가코드,2B) 95(TVR,5B) 5F2A(통화코드,2B)
@@ -452,7 +521,7 @@ bool EmvTranProc(BYTE Cmd_code, BYTE *pCmd, UINT nCmdlen, BYTE *pRsp, UINT *nRsp
 AIP = 40 00  (Byte1: bit7=CDA지원, bit4=DDA지원)</code></pre>
 
             <h3>Amex AIP 주요 비트</h3>
-            <p>AIP는 2바이트 플래그로 카드가 지원하는 기능을 알립니다. Kernel 4에서 핵심적으로 확인하는 비트는 다음과 같습니다.</p>
+            <p>AIP는 2바이트 플래그로 카드가 지원하는 기능을 알립니다. Kernel에서 핵심적으로 확인하는 비트는 다음과 같습니다.</p>
             <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
                 <strong>AIP 주요 플래그 (Byte 1)</strong><br>
                 - Bit 8: CDA 지원 여부<br>
@@ -463,7 +532,7 @@ AIP = 40 00  (Byte1: bit7=CDA지원, bit4=DDA지원)</code></pre>
                 - Bit 2: Cardholder Verification 지원<br>
                 <br>
                 <strong>Visa·MC와의 차이점</strong><br>
-                Amex AIP Byte 2의 Bit 8은 Mobile 단말 전용 기능 지원 여부를 나타냅니다. Kernel 4는 이 비트를 추가로 검사해 ExpressPay Mobile 거래 경로를 분기합니다.
+                Amex AIP Byte 2의 Bit 8은 Mobile 단말 전용 기능 지원 여부를 나타냅니다. 이 비트를 추가로 검사해 ExpressPay Mobile 거래 경로를 분기합니다.
             </div>
 
             <h3>ODA: DDA와 CDA</h3>
@@ -474,7 +543,7 @@ AIP = 40 00  (Byte1: bit7=CDA지원, bit4=DDA지원)</code></pre>
             </ul>
 
             <h3>CVM 처리와 Amex 특이사항</h3>
-            <p>Kernel 4의 CVM 처리는 카드 CVM 목록(CVM List)과 단말 CVM 능력(Terminal Capabilities), 거래 금액을 조합해 결정합니다. Amex는 일부 고액 거래 구간에서 온라인 PIN을 강제하는 별도 정책을 운용할 수 있으며, 소액 비접촉 거래에서는 No CVM(서명·PIN 생략)이 허용됩니다.</p>
+            <p> CVM 처리는 카드 CVM 목록(CVM List)과 단말 CVM 능력(Terminal Capabilities), 거래 금액을 조합해 결정합니다. Amex는 일부 고액 거래 구간에서 온라인 PIN을 강제하는 별도 정책을 운용할 수 있으며, 소액 비접촉 거래에서는 No CVM(서명·PIN 생략)이 허용됩니다.</p>
             <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// CVM 처리 의사 코드
 for each rule in CVM_List:
     if (amount_condition_met && terminal_supports_cvm):
@@ -501,7 +570,7 @@ else                                            → TC (오프라인 승인)</co
             </div>
 
             <h3>Visa·Mastercard와의 핵심 차이점</h3>
-            <p>Kernel 4는 다른 커널과 달리 Amex 네트워크 고유의 처리 규칙이 포함됩니다.</p>
+            <p>AMEX Kernel은 다른 커널과 달리 Amex 네트워크 고유의 처리 규칙이 포함됩니다.</p>
             <ul>
                 <li><strong>IAD(Issuer Application Data) 구조</strong>: Amex IAD는 CVR(Card Verification Results), DAC/ICC Dynamic Number 등 Amex 전용 필드를 포함하며 포맷이 Visa·MC와 다릅니다.</li>
                 <li><strong>ARPC 검증 방식</strong>: 온라인 응답 시 Amex는 자체 ARPC 생성 방식(Method 1/Method 2)을 정의하고 있어 발급사 인증 처리 로직이 별도로 필요합니다.</li>
@@ -510,15 +579,44 @@ else                                            → TC (오프라인 승인)</co
             </ul>
 
             <h3>펌웨어 연결점</h3>
-            <p>실제 구현에서는 Kernel 4 로직이 상태 머신 형태로 각 단계를 처리합니다. 핵심 파일 구조는 다음과 같습니다.</p>
+            <p>실제 구현에서는 AMEX Kernel 로직이 상태 머신 형태로 각 단계를 처리합니다. 핵심 파일 구조는 다음과 같습니다.</p>
             <ul>
-                <li><strong>AMEX_KERNEL.C</strong>: Kernel 4 메인 상태 머신. <code>AmexFuncSelectAID</code>, <code>AmexFuncGPO</code>, <code>AmexFuncReadRecord</code>, <code>AmexFuncGenAC</code>가 순서대로 이어집니다.</li>
+                <li><strong>AMEX_KERNEL.C</strong>: 메인 상태 머신. <code>AmexFuncSelectAID</code>, <code>AmexFuncGPO</code>, <code>AmexFuncReadRecord</code>, <code>AmexFuncGenAC</code>가 순서대로 이어집니다.</li>
                 <li><strong>AMEX_ODA.C</strong>: DDA/CDA 서명 검증 및 Amex 공개키 인증서 체인 처리입니다.</li>
                 <li><strong>AMEX_CVM.C</strong>: CVM 목록 파싱 및 단말 CVM 능력과의 매칭 처리입니다.</li>
                 <li><strong>EMV_TAA.C</strong>: IAC/TAC 기반 터미널 액션 분석 (Kernel 2/3와 공유 가능한 공통 모듈).</li>
             </ul>
 
-            <a href="https://canva.link/2c897tyhpxhk06h" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <div class="mt-10 mb-6 p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">핵심 약어 정리</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AEIPS</code> — American Express Integrated Circuit Card Specification, AMEX IC 카드 규격</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">ExpressPay</code> — AMEX 비접촉 결제 브랜드명 (AEIPS 기반)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AID</code> — Application Identifier, 카드 내 애플리케이션 식별자</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PDOL</code> — Processing Options Data Object List, GPO 수행 전 요구 단말 데이터 목록</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">GPO</code> — Get Processing Options, 거래 처리 옵션 요청 APDU</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AIP</code> — Application Interchange Profile, 카드 지원 기능 플래그 2바이트</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AFL</code> — Application File Locator, READ RECORD 범위 목록</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">ODA</code> — Offline Data Authentication, 오프라인 데이터 인증 (SDA·DDA·CDA 상위 개념)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">SDA</code> — Static Data Authentication, 정적 데이터 인증 (복제 공격 취약)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">DDA</code> — Dynamic Data Authentication, INTERNAL AUTHENTICATE 기반 동적 서명 인증</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CDA</code> — Combined Data Authentication, AC와 ODA를 1st GENERATE AC에서 동시 검증</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AC</code> — Application Cryptogram, ARQC·TC·AAC를 아우르는 카드 암호값 총칭</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">ARQC</code> — Authorisation Request Cryptogram, 온라인 인가 요청 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TC</code> — Transaction Certificate, 오프라인 승인 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AAC</code> — Application Authentication Cryptogram, 거절 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">ARPC</code> — Authorisation Response Cryptogram, 호스트 온라인 응답 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CID</code> — Cryptogram Information Data, GENERATE AC 응답의 AC 유형 바이트</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">IAD</code> — Issuer Application Data, 발급사 데이터 (AMEX 전용 CVR·DAC 포함)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CVR</code> — Card Verification Results, 카드 검증 결과 플래그</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TAA</code> — Terminal Action Analysis, IAC/TAC·TVR AND 연산으로 AC 유형 결정</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">IAC</code> — Issuer Action Code, 발급사 정의 액션 코드 (Denial·Online·Default)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TAC</code> — Terminal Action Code, 단말 정의 액션 코드</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TVR</code> — Terminal Verification Results, 검증 결과 저장 5바이트 플래그</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">HCE</code> — Host Card Emulation, 모바일 기기 소프트웨어 카드 에뮬레이션</div>
+                </div>
+            </div>
+            <a href="./kernel/amex.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
@@ -526,6 +624,124 @@ else                                            → TC (오프라인 승인)</co
     },
     {
         id: 22,
+        title: "Mastercard Kernel 거래 흐름 완전 분석",
+        category: "security",
+        categoryKo: "보안 및 인증 규격",
+        badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900",
+        author: "성현진 연구원 (모듈개발팀)",
+        date: "2026.06.25",
+        readTime: "읽는 시간 20분",
+        summary: "Mastercard 비접촉 거래의 전체 흐름을 처음부터 끝까지 분석합니다. PDOL, GPO, AIP/AFL, ODA, AC 요청·판정, CVM 처리, Outcome 결정 개념과 실제 펌웨어 코드의 연결점을 함께 살펴봅니다.",
+        tags: ["Mastercard", "Kernel", "MChip", "EMV", "Contactless", "PDOL", "AC", "CDA"],
+        content: `
+            <h3>Mastercard Kernel이란</h3>
+            <p>Mastercard 비접촉 거래의 L2 로직입니다. M/Chip Advance 및 PayPass 기반 카드와의 거래에서 리더기(단말기)가 카드 응답을 해석하고 승인·거절·온라인 요청 여부를 결정하는 핵심 엔진 역할을 합니다. Visa Kernel(qVSDC)와 비교하면 AC 요청 구조, CVM 처리, Outcome 결정 방식이 다르므로 별도의 커널 구현이 필요합니다.</p>
+
+            <h3>거래 흐름 전체 개요</h3>
+            <p>거래는 크게 다음 단계로 구성됩니다.</p>
+            <ol>
+                <li><strong>Entry Point → Kernel 선택</strong>: 리더가 카드 AID를 읽고 Mastercard AID(<code>A0 00 00 00 04 10 10</code>)를 확인한 뒤 Kernel을 활성화합니다.</li>
+                <li><strong>PDOL 처리 및 GPO</strong>: 카드가 요구하는 단말 데이터를 PDOL로 수집해 <code>GET PROCESSING OPTIONS</code>(GPO) 커맨드를 전송합니다.</li>
+                <li><strong>AIP / AFL 수신</strong>: GPO 응답에서 AIP(지원 기능 플래그)와 AFL(읽을 파일 목록)을 파싱합니다.</li>
+                <li><strong>레코드 읽기(READ RECORD)</strong>: AFL에 명시된 모든 레코드를 순서대로 읽어 카드 데이터를 수집합니다.</li>
+                <li><strong>ODA(오프라인 데이터 인증)</strong>: AIP에 따라 SDA, DDA, CDA 중 하나를 수행합니다.</li>
+                <li><strong>Processing Restrictions / CVM 처리</strong>: 거래 금액과 카드 CVM 목록을 비교해 서명·PIN·No CVM 중 CVM을 결정합니다.</li>
+                <li><strong>Terminal Risk Management(TRM)</strong>: 연속 오프라인 카운터, 랜덤 온라인 샘플링, 속도 점검 등을 수행합니다.</li>
+                <li><strong>Terminal Action Analysis(TAA)</strong>: IAC/TAC와 TVR를 AND 연산하여 ARQC·TC·AAC 중 요청할 AC 유형을 결정합니다.</li>
+                <li><strong>AC 요청 (GENERATE AC)</strong>: 1st GENERATE AC로 카드에 AC를 요청하고, 카드가 ARQC 또는 TC를 반환합니다.</li>
+                <li><strong>온라인 처리 (옵션)</strong>: ARQC 수신 시 호스트에 인가 요청을 보내고 응답(ARPC)으로 2nd GENERATE AC를 처리합니다.</li>
+                <li><strong>Outcome 결정</strong>: Approved / Declined / Online Request / Try Again / End Application 중 최종 결과를 확정합니다.</li>
+            </ol>
+
+            <h3>PDOL과 GPO 처리</h3>
+            <p>PDOL(Processing Options Data Object List)은 카드가 GPO 수행 전에 단말로부터 받고 싶은 TLV 데이터 목록입니다. 단말은 PDOL에 명시된 각 태그의 값을 채워 커맨드 데이터로 전송합니다.</p>
+            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// GET PROCESSING OPTIONS APDU 구성 예시
+// PDOL 태그: 9F66(TTQ,4B) 9F02(금액,6B) 9F03(기타금액,6B) 9F1A(국가코드,2B) 95(TVR,5B) 5F2A(통화코드,2B) 9A(거래일,3B) 9C(거래유형,1B) 9F37(랜덤수,4B)
+--> 80 A8 00 00 [Lc] 83 [len] [PDOL data...] 00
+
+// GPO 응답 (AIP + AFL 포함)
+&lt;-- 77 xx 82 02 [AIP] 94 xx [AFL] ... 90 00</code></pre>
+
+            <h3>AIP(Application Interchange Profile) 주요 비트</h3>
+            <p>AIP는 2바이트 플래그로 카드가 지원하는 기능을 알립니다. 핵심적으로 확인하는 비트는 다음과 같습니다.</p>
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
+                <strong>AIP 주요 플래그 (Byte 1)</strong><br>
+                - Bit 8: CDA 지원 여부<br>
+                - Bit 7: RFU<br>
+                - Bit 6: Issuer Authentication 지원<br>
+                - Bit 5: 온라인 PIN 지원<br>
+                - Bit 4: SDA 지원<br>
+                - Bit 3: DDA 지원<br>
+                - Bit 2: Cardholder Verification 지원<br>
+                - Bit 1: RFU
+            </div>
+
+            <h3>ODA: CDA(Combined Data Authentication)</h3>
+            <p>CDA는 ODA 방식 중 보안 강도가 가장 높으며, 1st GENERATE AC 응답에 서명 데이터를 포함시켜 AC와 인증을 동시에 검증합니다. AIP의 CDA 비트가 설정된 경우 단말은 GENERATE AC 커맨드에 CDA 요청 비트를 함께 전달합니다. 검증 실패 시 TVR의 해당 비트가 세트되어 TAA 결과에 영향을 줍니다.</p>
+
+            <h3>TAA: Terminal Action Analysis</h3>
+            <p>TAA는 IAC(Issuer Action Code)와 TAC(Terminal Action Code)를 TVR과 AND 연산하여 온라인·거절·승인 여부를 결정합니다. 단말은 IAC-Default, IAC-Denial, IAC-Online / TAC-Default, TAC-Denial, TAC-Online 6개 값을 순서대로 검사합니다.</p>
+            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// TAA 의사 코드
+if ((TVR &amp; IAC_Denial) || (TVR &amp; TAC_Denial))  → AAC (거절)
+if ((TVR &amp; IAC_Online) || (TVR &amp; TAC_Online))  → ARQC (온라인 요청)
+else                                            → TC (오프라인 승인)</code></pre>
+
+            <h3>GENERATE AC 요청과 AC 유형</h3>
+            <p>1st GENERATE AC 커맨드의 첫 바이트(Reference Control Parameter)에서 상위 2비트로 요청 AC 유형을 지정합니다.</p>
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
+                <strong>Reference Control Parameter 상위 2비트</strong><br>
+                - <code>00</code>: AAC 요청 (거절)<br>
+                - <code>01</code>: TC 요청 (오프라인 승인)<br>
+                - <code>10</code>: ARQC 요청 (온라인 인가)<br>
+                - <code>11</code>: RFU
+            </div>
+            <p>카드는 요청된 AC 유형을 그대로 따를 수 있고, 보안 판단에 따라 단계를 낮출 수도 있습니다(예: TC 요청 → AAC 반환). 응답의 Cryptogram Information Data(CID) 태그로 실제 AC 유형을 확인합니다.</p>
+
+            <h3>펌웨어 연결점</h3>
+            <p>실제 구현에서는 Kernel 로직이 상태 머신(State Machine) 형태로 각 단계를 순서대로 처리합니다. 핵심 파일 구조는 다음과 같습니다.</p>
+            <ul>
+                <li><strong>MC_KERNEL.C</strong>: Kernel 메인 상태 머신. <code>McFuncSelectAID</code>, <code>McFuncGPO</code>, <code>McFuncReadRecord</code>, <code>McFuncGenAC</code>가 순서대로 이어집니다.</li>
+                <li><strong>MC_ODA.C</strong>: SDA/DDA/CDA 서명 검증 로직과 공개키 인증서 체인 처리입니다.</li>
+                <li><strong>MC_CVM.C</strong>: CVM 목록 파싱 및 단말 CVM 능력과의 매칭 처리입니다.</li>
+                <li><strong>EMV_TAA.C</strong>: IAC/TAC 기반 터미널 액션 분석으로 AC 유형 결정을 담당합니다.</li>
+            </ul>
+
+            <div class="mt-10 mb-6 p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">핵심 약어 정리</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">MChip</code> — Mastercard Chip, MC 칩 기반 거래 규격 (Advance·Lite)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PayPass</code> — Mastercard 비접촉 결제 브랜드명</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AID</code> — Application Identifier, 카드 내 애플리케이션 식별자</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PDOL</code> — Processing Options Data Object List, GPO 수행 전 요구 단말 데이터 목록</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">GPO</code> — Get Processing Options, 거래 처리 옵션 요청 APDU</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AIP</code> — Application Interchange Profile, 카드 지원 기능 플래그 2바이트</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AFL</code> — Application File Locator, READ RECORD 범위 목록</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">ODA</code> — Offline Data Authentication, 오프라인 데이터 인증 (SDA·DDA·CDA 상위 개념)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">SDA</code> — Static Data Authentication, 정적 데이터 인증</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">DDA</code> — Dynamic Data Authentication, 동적 서명 기반 인증</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CDA</code> — Combined Data Authentication, AC와 ODA를 1st GENERATE AC에서 동시 검증</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CVM</code> — Cardholder Verification Method, 카드 소지자 인증 방식 (서명·PIN·No CVM 등)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TRM</code> — Terminal Risk Management, 오프라인 카운터·샘플링·속도 점검 단계</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TAA</code> — Terminal Action Analysis, IAC/TAC·TVR AND 연산으로 AC 유형 결정</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">IAC</code> — Issuer Action Code, 발급사 정의 액션 코드 (Denial·Online·Default)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TAC</code> — Terminal Action Code, 단말 정의 액션 코드</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TVR</code> — Terminal Verification Results, 검증 결과 저장 5바이트 플래그</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AC</code> — Application Cryptogram, ARQC·TC·AAC 총칭</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">ARQC</code> — Authorisation Request Cryptogram, 온라인 인가 요청 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TC</code> — Transaction Certificate, 오프라인 승인 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">AAC</code> — Application Authentication Cryptogram, 거절 암호값</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">CID</code> — Cryptogram Information Data, AC 유형을 나타내는 응답 바이트</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">RFU</code> — Reserved for Future Use, 예약된 미래 사용 비트</div>
+                </div>
+            </div>
+            <a href="./kernel/mastercard.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                <span>슬라이드 열기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+            </a>
+        `
+    },
+    {
+        id: 23,
         title: "PCI PTS: 결제 단말기 물리·논리 보안 요구사항 완전 분석",
         category: "security",
         categoryKo: "보안 및 인증 규격",
@@ -584,9 +800,9 @@ PIN Block: 04 12 71 98 76 FE DC BA  ← XOR 결과, 3DES/AES로 암호화 전송
             <p>PTS 기기 내 암호키는 수명 주기 전 단계에서 엄격히 관리되어야 합니다.</p>
             <ul>
                 <li><strong>초기 키 주입(Key Injection)</strong>: 제조 또는 배포 단계에서 물리적으로 보안된 환경(KIF, Key Injection Facility)에서만 마스터 키를 주입할 수 있습니다.</li>
-                <li><strong>키 계층 구조</strong>: 마스터 키(MK) → 세션 키(SK/PEK) → PIN 암호화 키(PEK)의 계층으로 분리하여 운용합니다.</li>
-                <li><strong>원격 키 갱신(DUKPT)</strong>: ANSI X9.24 Part 1(TDEA) 또는 Part 3(AES-128) 기반의 DUKPT(Derived Unique Key Per Transaction) 방식으로 거래마다 고유 키를 파생하여 사용합니다.</li>
-                <li><strong>키 소거</strong>: 탬퍼 감지, 키 만료, 비정상 상황 발생 시 즉시 키를 제로화합니다.</li>
+                <li style="margin-top: 0.75rem"><strong>키 계층 구조</strong>: 마스터 키(MK) → 세션 키(SK/PEK) → PIN 암호화 키(PEK)의 계층으로 분리하여 운용합니다.</li>
+                <li style="margin-top: 0.75rem"><strong>원격 키 갱신(DUKPT)</strong>: ANSI X9.24 Part 1(TDEA) 또는 Part 3(AES-128) 기반의 DUKPT(Derived Unique Key Per Transaction) 방식으로 거래마다 고유 키를 파생하여 사용합니다.</li>
+                <li style="margin-top: 0.75rem"><strong>키 소거</strong>: 탬퍼 감지, 키 만료, 비정상 상황 발생 시 즉시 키를 제로화합니다.</li>
             </ul>
             <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
                 <strong>DUKPT 파생 구조 요약</strong><br>
@@ -610,149 +826,127 @@ PIN Block: 04 12 71 98 76 FE DC BA  ← XOR 결과, 3DES/AES로 암호화 전송
                 - <strong>v6</strong>: AES-128 기반 DUKPT 의무화, 소프트웨어 서명 요구사항 강화
             </div>
 
-            <a href="https://canva.link/7p9wi0t2xwuxq88" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <div class="mt-10 mb-6 p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">핵심 약어 정리</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PCI</code> — Payment Card Industry, 국제 결제 카드 업계 표준화 기구</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PTS</code> — PIN Transaction Security, PIN 거래 보안 표준</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">SSC</code> — Security Standards Council, PCI 보안 표준 협의회</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">POI</code> — Point of Interaction, 카드 소지자-단말기 상호작용 지점 (POS·ATM·키오스크)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PED</code> — PIN Entry Device, PIN 입력 전용 장치 (독립형 PIN 패드)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">HSM</code> — Hardware Security Module, 암호 연산 전담 하드웨어 보안 모듈</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">OP</code> — Open Protocol, IP 네트워크 기반 결제 데이터 전송 보안 모듈</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">SPA</code> — Simple Power Analysis, 전력 소비 파형으로 키를 추측하는 단순 전력 분석 공격</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">DPA</code> — Differential Power Analysis, 다수 측정값 통계 분석으로 키를 복원하는 차분 전력 분석 공격</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PIN Block</code> — PIN 데이터를 PAN과 XOR해 만든 암호화 입력 단위 (ISO 9564 규정)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PAN</code> — Primary Account Number, 카드 주번호 (일반적으로 16자리)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">DUKPT</code> — Derived Unique Key Per Transaction, 거래마다 고유 키를 파생해 재사용을 방지하는 키 관리 방식</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">KIF</code> — Key Injection Facility, 초기 마스터 키를 단말기에 주입하는 물리 보안 시설</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">KSN</code> — Key Serial Number, DUKPT 키 파생에 사용하는 일련번호</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">IPEK</code> — Initial PIN Encryption Key, DUKPT 초기 파생 키</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">MK</code> — Master Key, 최상위 마스터 암호키</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">PEK</code> — PIN Encryption Key, PIN 암호화에 직접 사용하는 키</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TDEA</code> — Triple Data Encryption Algorithm, 3DES라고도 불리는 삼중 데이터 암호화 알고리즘</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">TLS</code> — Transport Layer Security, IP 통신 암호화 표준 프로토콜 (v1.2 이상 필수)</div>
+                    <div><code class="font-bold text-emerald-600 dark:text-emerald-400">Zeroization</code> — 탬퍼 감지 시 보안 메모리 데이터를 0으로 즉시 덮어쓰는 소거 기법</div>
+                </div>
+            </div>
+            <a href="./kernel/pcipts.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
         `
     },
     {
-        id: 21,
-        title: "Mastercard Kernel 2: EMV Contactless Book C-2 거래 흐름 완전 분석",
-        category: "security",
-        categoryKo: "보안 및 인증 규격",
-        badgeClass: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900",
+        id: 24,
+        title: "TNP20 HW 기술 검토: MAX32560 기반 통합 보안 시스템 보드 분석",
+        category: "hw",
+        categoryKo: "H/W 엔지니어링",
+        badgeClass: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-900",
         author: "성현진 연구원 (모듈개발팀)",
-        date: "2026.06.25",
-        readTime: "읽는 시간 20분",
-        summary: "Mastercard Kernel 2(M/Chip Advance) 비접촉 거래의 전체 흐름을 처음부터 끝까지 분석합니다. PDOL, GPO, AIP/AFL, ODA, AC 요청·판정, CVM 처리, Outcome 결정 개념과 실제 펌웨어 코드의 연결점을 함께 살펴봅니다.",
-        tags: ["Mastercard", "Kernel2", "MChip", "EMV", "Contactless", "PDOL", "AC", "CDA"],
+        date: "2026.07.02",
+        readTime: "읽는 시간 10분",
+        summary: "TNP20 HW는 MAX32560 중심의 제어, Flash/Secure Box 저장·보안, NFC/UART/USB 통신, LED 상태 표시, 메인·백업 전원까지 한 장의 PCB에 통합한 보안 시스템 보드입니다. 블록별 역할과 상호의존성, 기술 검토 시 우선 확인할 리스크를 정리합니다.",
+        tags: ["TNP20", "MAX32560", "SecureBox", "NFC", "PowerDesign", "Hardware"],
         content: `
-            <h3>Mastercard Kernel 2란</h3>
-            <p>Kernel 2는 EMVCo Book C-2에 정의된 Mastercard 비접촉 거래의 L2 로직입니다. M/Chip Advance 및 PayPass 기반 카드와의 거래에서 리더기(단말기)가 카드 응답을 해석하고 승인·거절·온라인 요청 여부를 결정하는 핵심 엔진 역할을 합니다. Visa Kernel 3(qVSDC)와 비교하면 AC 요청 구조, CVM 처리, Outcome 결정 방식이 다르므로 별도의 커널 구현이 필요합니다.</p>
+            <h3>TNP20 HW 개요</h3>
+            <p>TNP20 HW는 단일 기능 보드가 아니라, 제어·저장·보안·통신·전원 블록이 한 장의 PCB 위에서 상호의존적으로 동작하는 통합형 보안 시스템 보드입니다. 중앙 제어부인 <strong>MAX32560</strong>을 중심으로 외부 Flash, 물리 보안(Secure Box), NFC/UART/USB 통신, LED 상태 표시, 메인·백업 전원이 하나의 신호 체계로 묶여 있습니다.</p>
 
-            <h3>거래 흐름 전체 개요</h3>
-            <p>Kernel 2 거래는 크게 다음 단계로 구성됩니다.</p>
-            <ol>
-                <li><strong>Entry Point → Kernel 2 선택</strong>: 리더가 카드 AID를 읽고 Mastercard AID(<code>A0 00 00 00 04 10 10</code>)를 확인한 뒤 Kernel 2를 활성화합니다.</li>
-                <li><strong>PDOL 처리 및 GPO</strong>: 카드가 요구하는 단말 데이터를 PDOL로 수집해 <code>GET PROCESSING OPTIONS</code>(GPO) 커맨드를 전송합니다.</li>
-                <li><strong>AIP / AFL 수신</strong>: GPO 응답에서 AIP(지원 기능 플래그)와 AFL(읽을 파일 목록)을 파싱합니다.</li>
-                <li><strong>레코드 읽기(READ RECORD)</strong>: AFL에 명시된 모든 레코드를 순서대로 읽어 카드 데이터를 수집합니다.</li>
-                <li><strong>ODA(오프라인 데이터 인증)</strong>: AIP에 따라 SDA, DDA, CDA 중 하나를 수행합니다.</li>
-                <li><strong>Processing Restrictions / CVM 처리</strong>: 거래 금액과 카드 CVM 목록을 비교해 서명·PIN·No CVM 중 CVM을 결정합니다.</li>
-                <li><strong>Terminal Risk Management(TRM)</strong>: 연속 오프라인 카운터, 랜덤 온라인 샘플링, 속도 점검 등을 수행합니다.</li>
-                <li><strong>Terminal Action Analysis(TAA)</strong>: IAC/TAC와 TVR를 AND 연산하여 ARQC·TC·AAC 중 요청할 AC 유형을 결정합니다.</li>
-                <li><strong>AC 요청 (GENERATE AC)</strong>: 1st GENERATE AC로 카드에 AC를 요청하고, 카드가 ARQC 또는 TC를 반환합니다.</li>
-                <li><strong>온라인 처리 (옵션)</strong>: ARQC 수신 시 호스트에 인가 요청을 보내고 응답(ARPC)으로 2nd GENERATE AC를 처리합니다.</li>
-                <li><strong>Outcome 결정</strong>: Approved / Declined / Online Request / Try Again / End Application 중 최종 결과를 확정합니다.</li>
-            </ol>
+            <h3>중앙 제어부: MAX32560</h3>
+            <p>MAX32560은 보드 전체 동작을 묶는 중앙 제어부로, 12MHz 클럭이 일반 동작의 기준을, 32.768kHz 클럭이 저전력 모드의 기준을 제공합니다. 리셋 품질은 부팅 재현성과 직결되며, JTAG/USB는 디버그와 초기 검증 경로로 연결됩니다. MCU 검토의 핵심은 성능 수치가 아니라 클럭·리셋·전원 분리·디버그 접근성이 모두 같은 조건 묶음으로 정상 동작하는지 확인하는 것입니다.</p>
 
-            <h3>PDOL과 GPO 처리</h3>
-            <p>PDOL(Processing Options Data Object List)은 카드가 GPO 수행 전에 단말로부터 받고 싶은 TLV 데이터 목록입니다. 단말은 PDOL에 명시된 각 태그의 값을 채워 커맨드 데이터로 전송합니다.</p>
-            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// GET PROCESSING OPTIONS APDU 구성 예시
-// PDOL 태그: 9F66(TTQ,4B) 9F02(금액,6B) 9F03(기타금액,6B) 9F1A(국가코드,2B) 95(TVR,5B) 5F2A(통화코드,2B) 9A(거래일,3B) 9C(거래유형,1B) 9F37(랜덤수,4B)
---> 80 A8 00 00 [Lc] 83 [len] [PDOL data...] 00
+            <h3>저장과 물리 보안</h3>
+            <p>외부 Flash(W25Q128JVPIM)는 QSPI로 연결되어 코드·설정·데이터를 저장하는 동시에 Secure Box 정책과도 연동됩니다. 물리 보안은 tamper switch와 mesh pattern(TAM3/TAM5)으로 구성되어 개봉·절단·우회 시도를 감지한 뒤 Secure Box가 이를 차단합니다. 저장 구조와 보안 구조는 분리해서 볼 수 없는 하나의 체계입니다.</p>
 
-// GPO 응답 (AIP + AFL 포함)
-&lt;-- 77 xx 82 02 [AIP] 94 xx [AFL] ... 90 00</code></pre>
+            <h3>통신: NFC · UART · USB</h3>
+            <p>NFC는 PN5180 제어 칩이 MCU와 SPI로 연결되고, RF Matching과 안테나, EMC Filter가 이어지는 RF 체인 전체로 성능이 결정됩니다. 특히 <code>RF_PWR_ON</code>은 <span class="mono">LOW = RF POWER ON</span> 극성 주의가 필요합니다. UART0/1은 내부 디버그용, USB_DP/USB_DM은 외부 호스트 연결용으로 역할이 구분되며, 차동 배선 품질과 ESD 보호가 안정성의 핵심입니다.</p>
 
-            <h3>AIP(Application Interchange Profile) 주요 비트</h3>
-            <p>AIP는 2바이트 플래그로 카드가 지원하는 기능을 알립니다. Kernel 2에서 핵심적으로 확인하는 비트는 다음과 같습니다.</p>
-            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
-                <strong>AIP 주요 플래그 (Byte 1)</strong><br>
-                - Bit 8: CDA 지원 여부<br>
-                - Bit 7: RFU<br>
-                - Bit 6: Issuer Authentication 지원<br>
-                - Bit 5: 온라인 PIN 지원<br>
-                - Bit 4: SDA 지원<br>
-                - Bit 3: DDA 지원<br>
-                - Bit 2: Cardholder Verification 지원<br>
-                - Bit 1: RFU
+            <h3>전원: 메인 레일과 백업 배터리</h3>
+            <p>VDD_EXT 입력이 TPS61252DSG를 거쳐 5V·3.3V 레일을 생성하고, <code>PWR_GOOD</code> 신호가 레일 정상 여부를 알립니다. 전원이 상실되면 CR2032 배터리와 TPS3619-33DGK 감시 IC가 VBAT·PFO·RESET 신호로 저전력 백업 모드를 유지합니다. 전원 구조는 수치보다 "어느 레일이 먼저 살아야 하는지"의 순서가 검토의 핵심입니다.</p>
+
+            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-amber-400">
+                <strong>기술 검토 시 우선 리스크</strong><br>
+                - <strong>전원 안정성</strong>: 모든 블록의 공통 기반이며 증상이 여러 곳으로 퍼질 수 있습니다.<br>
+                - <strong>Tamper 신뢰성</strong>: 오탐지·미탐지 모두 큰 문제로 이어집니다.<br>
+                - <strong>RF 튜닝/매칭</strong>: 칩 단독 검증만으로는 원인을 분리하기 어렵습니다.<br>
+                - <strong>USB 배선/ESD</strong>: 현장 연결 문제와 디버그 장애를 동시에 유발할 수 있습니다.<br>
+                - <strong>백업 전류 가정</strong>: 온도·누설 조건에 따라 유지 시간 해석이 크게 달라집니다.
             </div>
 
-            <h3>ODA: CDA(Combined Data Authentication)</h3>
-            <p>CDA는 ODA 방식 중 보안 강도가 가장 높으며, 1st GENERATE AC 응답에 서명 데이터를 포함시켜 AC와 인증을 동시에 검증합니다. AIP의 CDA 비트가 설정된 경우 단말은 GENERATE AC 커맨드에 CDA 요청 비트를 함께 전달합니다. 검증 실패 시 TVR의 해당 비트가 세트되어 TAA 결과에 영향을 줍니다.</p>
-
-            <h3>TAA: Terminal Action Analysis</h3>
-            <p>TAA는 IAC(Issuer Action Code)와 TAC(Terminal Action Code)를 TVR과 AND 연산하여 온라인·거절·승인 여부를 결정합니다. 단말은 IAC-Default, IAC-Denial, IAC-Online / TAC-Default, TAC-Denial, TAC-Online 6개 값을 순서대로 검사합니다.</p>
-            <pre class="bg-slate-950 p-4 rounded-lg text-slate-300 font-mono text-xs"><code>// TAA 의사 코드
-if ((TVR &amp; IAC_Denial) || (TVR &amp; TAC_Denial))  → AAC (거절)
-if ((TVR &amp; IAC_Online) || (TVR &amp; TAC_Online))  → ARQC (온라인 요청)
-else                                            → TC (오프라인 승인)</code></pre>
-
-            <h3>GENERATE AC 요청과 AC 유형</h3>
-            <p>1st GENERATE AC 커맨드의 첫 바이트(Reference Control Parameter)에서 상위 2비트로 요청 AC 유형을 지정합니다.</p>
-            <div class="my-6 p-4 bg-slate-100 dark:bg-slate-900 rounded-xl border-l-4 border-emerald-400">
-                <strong>Reference Control Parameter 상위 2비트</strong><br>
-                - <code>00</code>: AAC 요청 (거절)<br>
-                - <code>01</code>: TC 요청 (오프라인 승인)<br>
-                - <code>10</code>: ARQC 요청 (온라인 인가)<br>
-                - <code>11</code>: RFU
+            <div class="mt-10 mb-6 p-5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">핵심 약어 정리</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">MCU</code> — 주변 장치를 통합 제어하는 중심 프로세서. 이 보드에서는 MAX32560이 해당</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">QSPI</code> — 고속 외부 Flash 연결에 사용하는 직렬 인터페이스</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">Tamper</code> — 물리 침입, 개봉, 절단 시도를 감지하는 구조 또는 신호 체계</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">Secure Box</code> — 민감 회로나 보안 감지 구조를 보호·연동하는 개념적 보안 영역</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">PWR_GOOD</code> — 전원 레일이 정상 범위에 들어왔음을 알려주는 상태 신호</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">PFO</code> — 전원 이상 또는 저전압 조건을 알려주는 모니터 출력 신호</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">ESD</code> — 정전기 방전에 대한 보호 설계</div>
+                    <div><code class="font-bold text-amber-600 dark:text-amber-400">EMC</code> — 전자파 간섭 억제와 적합성 관점의 설계 기준</div>
+                </div>
             </div>
-            <p>카드는 요청된 AC 유형을 그대로 따를 수 있고, 보안 판단에 따라 단계를 낮출 수도 있습니다(예: TC 요청 → AAC 반환). 응답의 Cryptogram Information Data(CID) 태그로 실제 AC 유형을 확인합니다.</p>
 
-            <h3>펌웨어 연결점</h3>
-            <p>실제 구현에서는 Kernel 2 로직이 상태 머신(State Machine) 형태로 각 단계를 순서대로 처리합니다. 핵심 파일 구조는 다음과 같습니다.</p>
-            <ul>
-                <li><strong>MC_KERNEL.C</strong>: Kernel 2 메인 상태 머신. <code>McFuncSelectAID</code>, <code>McFuncGPO</code>, <code>McFuncReadRecord</code>, <code>McFuncGenAC</code>가 순서대로 이어집니다.</li>
-                <li><strong>MC_ODA.C</strong>: SDA/DDA/CDA 서명 검증 로직과 공개키 인증서 체인 처리입니다.</li>
-                <li><strong>MC_CVM.C</strong>: CVM 목록 파싱 및 단말 CVM 능력과의 매칭 처리입니다.</li>
-                <li><strong>EMV_TAA.C</strong>: IAC/TAC 기반 터미널 액션 분석으로 AC 유형 결정을 담당합니다.</li>
-            </ul>
-
-            <a href="https://canva.link/w0ga26p9qg4qs3k" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+            <a href="./hw/tnp20_hw.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
                 <span>슬라이드 열기</span>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
             </a>
         `
     },
     {
-        id: 19,
-        title: "Git 명령어 20가지: 명령어에서 AI 프롬프트로",
-        category: "report",
-        categoryKo: "기술 리포트",
-        badgeClass: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-900",
-        author: "성현진 엔지니어 (모듈개발팀)",
-        date: "2026.06.19",
-        readTime: "읽는 시간 8분",
-        summary: "git status부터 cherry-pick까지 20개 Git 명령어를 기존 CLI 사용법과 AI 에이전트 프롬프트 작성법으로 나란히 비교한 발표용 슬라이드입니다.",
-        tags: ["Git", "AI", "Prompt", "CLI", "Slides"],
+        id: 25,
+        title: "CSTS 소프트웨어 테스트 자료 정리",
+        category: "sw",
+        categoryKo: "S/W & 결제 플랫폼",
+        badgeClass: "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-sky-300 border border-blue-200 dark:border-blue-900",
+        author: "성현진 연구원 (모듈개발팀)",
+        date: "2026.07.03",
+        readTime: "읽는 시간 7분",
+        summary: "요구사항부터 테스트 원칙, 설계 기법, 구조 기반 커버리지, ISO/IEC/IEEE 29119까지 소프트웨어 테스트 전반을 단계적으로 정리한 CSTS 자료입니다.",
+        tags: ["CSTS", "SoftwareTesting", "QA", "Lecture", "Slides", "ISO29119"],
         content: `
-            <h3>포스트 소개</h3>
-            <p>이 슬라이드는 Git 명령어를 단순히 외우는 자료가 아니라, AI 에이전트를 쓰기 전에는 명령어를 어떻게 직접 실행했고 지금은 같은 작업을 어떤 프롬프트로 요청해야 하는지 비교합니다. 핵심은 명령어를 없애는 것이 아니라 목표, 범위, 안전 조건, 검증 기준을 더 정확히 전달하는 것입니다.</p>
+            <h3>CSTS 자료 소개</h3>
+            <p>이 자료는 <strong>요구사항</strong>, <strong>테스트 원칙</strong>, <strong>설계 기법</strong>, <strong>구조 기반 커버리지</strong>, 그리고 <strong>테스트 프로세스</strong>까지 소프트웨어 테스트의 주요 주제를 한 흐름으로 정리한 CSTS 자료입니다. 결정 테이블, 상태 전이 테스트, ISO/IEC/IEEE 29119까지 함께 다루며 전체 구성을 단계적으로 따라갈 수 있게 묶었습니다.</p>
 
-            <h3>Before / Now 관점</h3>
+            <h3>다루는 범위</h3>
             <ul>
-                <li><strong>Before</strong>: 명령어와 옵션을 직접 조합하고 출력 결과를 사람이 읽은 뒤 다음 명령을 결정했습니다.</li>
-                <li><strong>Now</strong>: AI 에이전트에게 목표와 제약을 말하고, 에이전트가 실행한 명령과 diff, 테스트 결과를 사람이 검토합니다.</li>
-                <li><strong>좋은 프롬프트</strong>: 어떤 작업을 할지, 어떤 파일을 건드려도 되는지, 위험하면 어디서 멈출지를 포함합니다.</li>
-                <li><strong>마지막 책임</strong>: commit, push, reset 같은 변경 작업은 에이전트 결과를 확인한 뒤 승인하는 흐름이 안전합니다.</li>
+                <li><strong>요구사항 개요</strong>: 요구사항 정의와 분류, 테스트 기준으로서의 의미</li>
+                <li><strong>테스트 기본 원칙</strong>: SW 테스팅 7가지 기본 원칙, G.J 마이어스 테스트 원칙</li>
+                <li><strong>테스트 방법</strong>: 테스트 레벨, 기능/비기능, 정적/동적 테스트</li>
+                <li><strong>설계 기법 예제</strong>: 동등 분할, 경계 값 분석, 결정 테이블, 상태 전이 테스트</li>
+                <li><strong>구조 기반 테스트</strong>: 구문, 결정, 조건, MC/DC, 다중 조건 커버리지</li>
+                <li><strong>프로세스</strong>: ISO/IEC/IEEE 29119와 조직/관리/동적 테스트 프로세스</li>
             </ul>
 
-            <h3>다루는 Git 명령어 20가지</h3>
-            <ul>
-                <li><strong>상태와 변경 검토</strong>: <code>git status</code>, <code>git diff</code></li>
-                <li><strong>커밋 구성</strong>: <code>git add</code>, <code>git commit</code></li>
-                <li><strong>브랜치 작업</strong>: <code>git branch</code>, <code>git switch</code>, <code>git checkout</code></li>
-                <li><strong>원격 동기화</strong>: <code>git fetch</code>, <code>git pull</code>, <code>git push</code></li>
-                <li><strong>기록 확인과 복구</strong>: <code>git log</code>, <code>git restore</code>, <code>git reset</code></li>
-                <li><strong>통합과 이력 정리</strong>: <code>git merge</code>, <code>git rebase</code>, <code>git cherry-pick</code></li>
-                <li><strong>작업 보관과 저장소 관리</strong>: <code>git stash</code>, <code>git remote</code>, <code>git clone</code>, <code>git tag</code></li>
-            </ul>
+            <h3>활용 포인트</h3>
+            <p>프로젝터에서 보기 좋게 글자 크기와 표 가독성을 조정했고, 좌우 화살표만으로 넘길 수 있게 구성했습니다. 대본은 슬라이드 순서에 맞춰 바로 읽거나 각 장표의 설명 흐름을 참고하는 용도로 사용할 수 있습니다.</p>
 
-            <h3>프롬프트 예시</h3>
-            <ul>
-                <li><strong>status</strong>: 현재 저장소 상태를 확인하고 수정/추가/삭제/추적 제외 파일을 표로 요약해줘.</li>
-                <li><strong>diff</strong>: 아직 커밋하지 않은 변경을 의도된 변경, 위험한 변경, 확인 질문으로 나눠 요약해줘.</li>
-                <li><strong>add</strong>: 이번 커밋 목적과 관련된 변경만 stage하고, 제외한 파일과 이유를 알려줘.</li>
-                <li><strong>pull</strong>: 원격 변경을 반영하되 충돌이 나면 자동 커밋하지 말고 충돌 파일과 해결 방향을 먼저 보고해줘.</li>
-                <li><strong>reset</strong>: soft, mixed, hard 차이를 설명하고 작업 손실 가능성이 있으면 실행 전 멈춰줘.</li>
-            </ul>
-
-            <a href="../topic2/git-commands-slides.html" target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
-                <span>슬라이드 열기</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-            </a>
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a href="./csts/csts.html" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-black text-white transition hover:bg-primary-700">
+                    <span>슬라이드 열기</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                </a>
+            </div>
         `
     }
 ];

@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="CSTS 강의형 HTML 슬라이드" />
+  <title>CSTS 소프트웨어 테스트 자료 정리</title>
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffdf8;
+      --ink: #1d1c1a;
+      --muted: #5c564e;
+      --line: #d8d0c2;
+      --brown: #6f4e37;
+      --brown-soft: #f0e0d1;
+      --olive: #6d7752;
+      --blue: #4b6780;
+      --gold: #c89b3c;
+      --shadow: rgba(29, 28, 26, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      font-size: 19px;
+    }
+
+    body {
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(200, 155, 60, 0.16), transparent 28%),
+        radial-gradient(circle at 85% 82%, rgba(75, 103, 128, 0.14), transparent 30%),
+        linear-gradient(135deg, #efe8dd 0%, #f7f3ec 48%, #efe7da 100%);
+      color: var(--ink);
+      font-family: "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      word-break: keep-all;
+      line-height: 1.5;
+    }
+
+    .deck {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: min(100vw, 177.7778vh);
+      height: min(100vh, 56.25vw);
+      transform: translate(-50%, -50%);
+      overflow: hidden;
+      border-radius: 1.1rem;
+      background: var(--paper);
+      box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.18);
+    }
+
+    .deck::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(111, 78, 55, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(111, 78, 55, 0.035) 1px, transparent 1px);
+      background-size: 2.8rem 2.8rem;
+      pointer-events: none;
+      mask-image: linear-gradient(#000, rgba(0, 0, 0, 0.2));
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 1.08rem;
+      padding: 1.22rem 1.55rem 1.38rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(1.8rem);
+      transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .chapter {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.28rem 0.75rem;
+      border-radius: 999px;
+      background: var(--brown);
+      color: #fffaf4;
+      font-size: 1.14rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .chapter::before {
+      content: "";
+      width: 0.46rem;
+      height: 0.46rem;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .page {
+      color: var(--muted);
+      font-size: 1.26rem;
+      font-weight: 800;
+    }
+
+    .content {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(3.8rem, 5.8vw, 6.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    h2 {
+      font-size: clamp(2.7rem, 4vw, 4.2rem);
+      line-height: 1.18;
+      letter-spacing: -0.03em;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      line-height: 1.4;
+      color: var(--brown);
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.58rem;
+      line-height: 1.64;
+    }
+
+    .grid2,
+    .grid3,
+    .grid4,
+    .hero,
+    .split,
+    .flow {
+      display: grid;
+      gap: 0.78rem;
+      align-items: stretch;
+    }
+
+    .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .hero { grid-template-columns: 1.25fr 0.75fr; }
+    .split { grid-template-columns: 1fr 1fr; }
+    .flow { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+    .card,
+    .note,
+    .band,
+    .image-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: rgba(255, 253, 248, 0.95);
+      box-shadow: 0 0.7rem 1.6rem var(--shadow);
+    }
+
+    .card,
+    .note {
+      padding: 0.92rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.56rem;
+    }
+
+    .card.highlight {
+      border-color: rgba(200, 155, 60, 0.55);
+      box-shadow: inset 0 0 0 1px rgba(200, 155, 60, 0.18), 0 0.7rem 1.6rem var(--shadow);
+    }
+
+    .note {
+      background: linear-gradient(145deg, #70503a 0%, #564032 100%);
+      color: #fffaf3;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .note h3 {
+      color: #ffdca1;
+    }
+
+    .band {
+      padding: 0.9rem 1.08rem;
+      background: linear-gradient(135deg, #f6ead8 0%, #f8f2e8 100%);
+      color: #533a2b;
+      font-size: 1.38rem;
+      font-weight: 700;
+      line-height: 1.58;
+    }
+
+    .label-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .chip {
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      background: var(--brown-soft);
+      color: var(--brown);
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+
+    .list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.44rem;
+    }
+
+    .list li {
+      position: relative;
+      padding-left: 1.05rem;
+      font-size: 1.42rem;
+      line-height: 1.56;
+    }
+
+    .list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.44rem;
+      width: 0.44rem;
+      height: 0.44rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--blue));
+    }
+
+    .ordered-list {
+      margin: 0;
+      padding-left: 1.55rem;
+      display: grid;
+      gap: 0.42rem;
+    }
+
+    .ordered-list li {
+      font-size: 1.42rem;
+      line-height: 1.56;
+      padding-left: 0.08rem;
+    }
+
+    .single-card-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.38rem;
+    }
+
+    .single-card-list li {
+      position: relative;
+      padding-left: 1.08rem;
+      font-size: 1.32rem;
+      line-height: 1.48;
+    }
+
+    .single-card-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.42rem;
+      width: 0.42rem;
+      height: 0.42rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--blue));
+    }
+
+    .mini-list {
+      margin: 0;
+      padding-left: 1rem;
+      display: grid;
+      gap: 0.28rem;
+      color: var(--muted);
+      font-size: 1.28rem;
+      line-height: 1.5;
+    }
+
+    .definition {
+      display: grid;
+      gap: 0.48rem;
+      padding: 0.78rem 0.88rem;
+      border-left: 0.3rem solid var(--gold);
+      border-radius: 0.3rem 0.8rem 0.8rem 0.3rem;
+      background: rgba(200, 155, 60, 0.08);
+      color: #503824;
+      font-size: 1.36rem;
+      line-height: 1.56;
+    }
+
+    .table-wrap {
+      flex: 0 0 auto !important;
+      width: 100%;
+      align-self: stretch;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 0.9rem;
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .split > .table-wrap,
+    .grid2 > .table-wrap,
+    .grid3 > .table-wrap,
+    .grid4 > .table-wrap {
+      align-self: start;
+      justify-self: stretch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      padding: 0.58rem 0.62rem;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+      font-size: 1.2rem;
+      line-height: 1.48;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: 0;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    th {
+      background: #efe3d4;
+      color: #4a3526;
+      font-weight: 800;
+    }
+
+    .dense th,
+    .dense td {
+      padding: 0.34rem 0.34rem;
+      font-size: 1.06rem;
+      line-height: 1.34;
+      text-align: center;
+    }
+
+    .tight th,
+    .tight td {
+      padding: 0.35rem 0.38rem;
+      font-size: 1.08rem;
+      line-height: 1.36;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .code {
+      margin: 0;
+      padding: 0.8rem 0.95rem;
+      border-radius: 0.9rem;
+      background: #2c241e;
+      color: #f8f1e7;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 1.16rem;
+      line-height: 1.52;
+      white-space: pre-wrap;
+    }
+
+    .image-card {
+      padding: 0.55rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .image-card img {
+      width: 100%;
+      height: auto;
+      max-height: 21rem;
+      object-fit: contain;
+      border-radius: 0.7rem;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 1.14rem;
+      line-height: 1.5;
+    }
+
+    .flow-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.24rem;
+      padding: 0.72rem 0.56rem;
+      border: 1px solid var(--line);
+      border-radius: 0.9rem;
+      background: #fffdf8;
+      text-align: center;
+    }
+
+    .flow-box strong {
+      font-size: 1.26rem;
+      color: var(--brown);
+    }
+
+    .flow-box span {
+      color: var(--muted);
+      font-size: 1.12rem;
+      line-height: 1.42;
+    }
+
+    .columns {
+      columns: 2;
+      column-gap: 1.2rem;
+      font-size: 1.22rem;
+      line-height: 1.58;
+      color: var(--muted);
+    }
+
+    .columns p {
+      break-inside: avoid;
+      margin-bottom: 0.8rem;
+    }
+
+    .tiny {
+      font-size: 1.08rem;
+      line-height: 1.38;
+    }
+
+    .closing {
+      background:
+        radial-gradient(circle at 20% 18%, rgba(200, 155, 60, 0.22), transparent 28%),
+        linear-gradient(145deg, #4f3b2f 0%, #2d2621 100%);
+      color: #fffaf2;
+    }
+
+    .closing .header {
+      border-bottom-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .closing .chapter {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .closing .page,
+    .closing .lead {
+      color: rgba(255, 250, 242, 0.8);
+    }
+
+    .closing .card {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
+      color: #fffaf2;
+    }
+
+    .closing .card h3 {
+      color: #ffdca1;
+    }
+
+    @media (max-width: 1280px), (max-height: 820px) {
+      .slide {
+        padding: 1.2rem 1.45rem 1.35rem;
+      }
+
+      .grid4,
+      .flow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck">
+    <section class="slide active">
+      <div class="header">
+        <span class="chapter">CSTS Lecture</span>
+        <span class="page">01 / 49</span>
+      </div>
+      <div class="content">
+        <div class="hero" style="flex: 1;">
+          <div class="card highlight" style="justify-content: center; gap: 0.9rem;">
+            <div class="label-row">
+            </div>
+            <h1>CSTS<br />소프트웨어 테스트</h1>
+            <p class="lead">요구사항, 테스트 원칙, 테스트 설계 기법, 예제, 테스트 프로세스까지</p>
+          </div>
+          <div class="note" style="justify-content: center;">
+            <h3>이번 자료의 흐름</h3>
+            <ul class="list">
+              <li>테스트의 기본 개념을 구조적으로 정리</li>
+              <li>명세 기반, 상태 전이, 구조 기반 테스트</li>
+              <li>ISO/IEC/IEEE 29119 기반 테스트 프로세스까지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">Overview</span>
+        <span class="page">02 / 49</span>
+      </div>
+      <div class="content">
+        <h2>자료 구성</h2>
+        <div class="flow">
+          <div class="flow-box"><strong>1. 요구사항</strong><span>요구사항 정의와 분류</span></div>
+          <div class="flow-box"><strong>2. 테스트 개요</strong><span>7가지 원칙과 마이어스 원칙</span></div>
+          <div class="flow-box"><strong>3. 테스트 방법</strong><span>레벨, 유형, 설계기법</span></div>
+          <div class="flow-box"><strong>4. 예제</strong><span>결정 테이블, 상태 전이, 커버리지</span></div>
+          <div class="flow-box"><strong>5. 프로세스</strong><span>ISO 29119와 조직/동적 테스트 프로세스</span></div>
+        </div>
+        <div class="grid2" style="flex: 1;">
+          <div class="card">
+            <h3>진행 방식</h3>
+            <ul class="list">
+              <li>개념을 먼저 설명한 뒤 표와 예제로 구체화합니다.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>핵심 포인트</h3>
+            <ul class="list">
+              <li>정의 암기보다 “왜 이 기법이 필요한가”를 함께 설명합니다.</li>
+              <li>예제 파트는 그대로 읽는 것이 아니라 테스트 설계 의도를 해설합니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">1. 요구사항 개요</span>
+        <span class="page">03 / 49</span>
+      </div>
+      <div class="content">
+        <h2>요구사항이란</h2>
+        <div class="grid2" style="flex: 1;">
+          <div class="card highlight">
+            <h3>정의 1</h3>
+            <div class="definition">어떤 문제를 해결하거나 특정의 목적을 위하여 필요한 조건이나 능력</div>
+          </div>
+          <div class="card highlight">
+            <h3>정의 2</h3>
+            <div class="definition">소프트웨어가 수행해야 하는 작업 및 성공을 위해 충족해야 하는 조건</div>
+          </div>
+        </div>
+        <div class="band">테스트는 결국 요구사항을 기준으로 합니다. 요구사항이 불명확하면 테스트도 모호해지고, 반대로 요구사항이 선명하면 테스트 설계 기준도 선명해집니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">1. 요구사항 개요</span>
+        <span class="page">04 / 49</span>
+      </div>
+      <div class="content">
+        <h2>요구사항 분류</h2>
+        <div class="card" style="flex: 1;">
+          <ul class="single-card-list">
+            <li><strong>기능 요구사항</strong>: 반드시 수행해야 하는 기능(동작)</li>
+            <li><strong>성능 요구사항</strong>: 목표 시스템의 성능</li>
+            <li><strong>시스템 장비구성 요구사항</strong>: 필요한 시스템 장비 구성</li>
+            <li><strong>인터페이스 요구사항</strong>: 시스템 인터페이스, 사용자 인터페이스</li>
+            <li><strong>데이터 요구사항</strong>: 데이터 구축</li>
+            <li><strong>테스트 요구사항</strong>: 테스트 유형, 테스트 환경, 방법, 절차</li>
+            <li><strong>보안 요구사항</strong>: 접근 통제</li>
+            <li><strong>품질 요구사항</strong>: 신뢰성, 사용성, 유지보수성, 이식성, 보안성</li>
+            <li><strong>제약사항</strong>: 목표시스템 설계, 구축, 운영과 관련된 제도 등 제약 조건</li>
+            <li><strong>프로젝트 관리 요구사항</strong>: 관리 방법, 추진 단계별 수행방안</li>
+            <li><strong>프로젝트 지원 요구사항</strong>: 시스템 안정화 및 운영, 훈련 및 지원, 하자보수, 유지관리</li>
+          </ul>
+        </div>
+        <div class="band">요구사항은 기능만 의미하지 않습니다. 성능, 품질, 운영, 지원까지 모두 테스트 기준으로 연결됩니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">2. 테스트 개요</span>
+        <span class="page">06 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 개요</h2>
+        <div class="split" style="flex: 1;">
+          <div class="card">
+            <h3>이번 장의 축</h3>
+            <ul class="list">
+              <li>SW 테스팅 7가지 기본 원칙</li>
+              <li>G.J 마이어스 SW테스트 원칙</li>
+              <li>실무에서 테스트를 설계할 때의 사고 기준</li>
+            </ul>
+          </div>
+          <div class="note">
+            <h3>왜 중요한가</h3>
+            <ul class="list">
+              <li>테스트 기법을 암기해도 원칙을 모르고 적용하면 기계적인 체크리스트가 되기 쉽습니다.</li>
+              <li>원칙은 “무엇을 테스트할지”보다 “어떻게 생각해야 하는지”를 정리해 줍니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">2. 테스트 개요</span>
+        <span class="page">07 / 49</span>
+      </div>
+      <div class="content">
+        <h2>SW 테스팅 7가지 기본 원칙</h2>
+        <div class="card" style="flex: 1;">
+          <ol class="ordered-list">
+            <li><strong>테스팅은 결함이 존재함을 밝히는 활동이다.</strong></li>
+            <li><strong>완벽한 테스팅은 불가능하다.</strong> 무한 경로, 무한 입력값, 무한 타이밍 등 모든 조합을 전수 테스트 불가능</li>
+            <li><strong>테스팅은 개발초기에 시작해야한다.</strong> 비용/품질/기간 준수 가능</li>
+            <li><strong>결함은 집중된다.</strong> 8:2 파로스 원칙: 대다수의 결함은 소수의 특정 모듈에 집중발생된다.</li>
+            <li><strong>살충제 패러독스</strong> 동일한 테스트 케이스의 반복으로는 새로운 결함을 찾을 수 없다.</li>
+            <li><strong>테스팅은 정황에 의존적이다.</strong> 정황과 도메인에 따라 다르게 테스트해야 한다.</li>
+            <li><strong>오류 부재의 궤변</strong> 요구사항과 불일치하면 결함이 없어도 품질이 높다고 할 수 없다.</li>
+          </ol>
+        </div>
+        <div class="band">즉, 테스트는 개수를 많이 돌리는 것이 아니라 상황과 목적에 맞게 설계해야 의미가 있습니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">2. 테스트 개요</span>
+        <span class="page">09 / 49</span>
+      </div>
+      <div class="content">
+        <h2>G.J 마이어스 SW테스트 원칙</h2>
+        <div class="card" style="flex: 1;">
+          <ol class="ordered-list">
+            <li>테스트는 프로그램을 개발한 팀과 무관한 그룹이 수행해야 한다.</li>
+            <li>결함이 발견되지 않으리라는 가정 하에 테스트 계획을 수립해선 안된다.</li>
+            <li>타당한 경우 뿐만 아니라 타당하지 않고 예상하지 못한 경우에 대해 테스트해야 한다.</li>
+            <li>프로그램의 어떤 부분에 남아 있을 확률은 그 부분에서 이미 발견된 결함의 수에 비례한다.</li>
+            <li>테스트 케이스를 체계적으로 관리하라.</li>
+            <li>테스트 결과를 철저히 점검하라.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">10 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 방법 전체 지도</h2>
+        <div class="flow">
+          <div class="flow-box"><strong>테스트 레벨</strong><span>컴포넌트/단위, 통합, 시스템, 인수</span></div>
+          <div class="flow-box"><strong>테스트 유형</strong><span>기능 / 비기능</span></div>
+          <div class="flow-box"><strong>설계기법</strong><span>정적 / 동적</span></div>
+          <div class="flow-box"><strong>명세 기반</strong><span>동등 분할, 경계 값, 결정 테이블, 상태 전이</span></div>
+          <div class="flow-box"><strong>구조 기반</strong><span>커버리지 중심</span></div>
+        </div>
+        <div class="band">이제부터는 “무엇을 기준으로 테스트를 나누는가”를 단계적으로 살펴봅니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">11 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 레벨에 의한 방법</h2>
+        <div class="table-wrap tight" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 25%;">테스트 기법</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>컴포넌트(Component)/단위(Unit) 테스트</strong></td>
+                <td>
+                  • 테스트가 가능한 단위로 나누어진 소프트웨어 내에서 결함을 찾고 그 기능을 검증<br />
+                  • 주로 구조 기반 테스트<br />
+                  • 시스템의 다른 부분에서 격리해 독립적으로 수행<br />
+                  • 소스 코드를 활용하여 테스트를 설계, 기능적 테스트 수행
+                </td>
+              </tr>
+              <tr>
+                <td><strong>통합(Intergration) 테스트</strong></td>
+                <td>
+                  • 시스템을 구성하는 단위 모듈들이 정확하게 통합되었는지 초점을 둠<br />
+                  • 시나리오 기반의 테스트 수행<br />
+                  • 모듈 간 통합에 주목하여, 코드가 외부 종속성과 올바르게 작동하는지 확인
+                </td>
+              </tr>
+              <tr>
+                <td><strong>시스템(System) 테스트</strong></td>
+                <td>
+                  • 발견할 수 있는 환경특성 장애 리스크를 최소화하기 위해 실제 최종사용환경 또는 유사한 환경에서 수행<br />
+                  • 기능적 요구사항은 명세기반(Black-box) 기법 수행<br />
+                  • 비기능적 요구사항은 신뢰성, 사용성, 효율성, 유지보수성, 이식성, 보안성, 호환성 등 품질 속성을 포함<br />
+                  • End to End 테스트를 함(종단간 테스트)
+                </td>
+              </tr>
+              <tr>
+                <td><strong>인수(Acceptance) 테스트</strong></td>
+                <td>• 고객/사용자 관점에서 고객이 기대하는 방식으로 소프트웨어가 동작하는 지 확인</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">13 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 유형에 의한 방법</h2>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 24%;">테스트 유형</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>기능 테스트</strong></td>
+                <td>• 기능 요구 사항 측면의 결함 검출 및 충족 여부 확인을 목적으로 함<br />• 모든 테스트 레벨에서 진행됨</td>
+              </tr>
+              <tr>
+                <td><strong>비기능 테스트</strong></td>
+                <td>• 성능, 보안성, 신뢰성 등 품질 요구 사항 측면의 결함 검출 및 충족 여부 확인을 목적으로 함<br />• 일반적으로 시스템 테스트와 인수 테스트 수준에서 진행됨</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">14 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 설계기법에 의한 방법</h2>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 24%;">테스트 설계기법</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>정적 테스트</strong></td>
+                <td>• 테스트 대상을 실행하지 않는 방식으로 테스트</td>
+              </tr>
+              <tr>
+                <td><strong>동적 테스트</strong></td>
+                <td>• 테스트 대상을 실행하여 결함을 검출하는 방식으로, 적절한 입력값 즉 테스트 케이스를 결정해야 함</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="band">정적 테스트는 실행 전 품질을 확인하는 방법이고, 동적 테스트는 실제 실행과 결과를 중심으로 판단하는 방법이에요.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">15 / 49</span>
+      </div>
+      <div class="content">
+        <h2>정적 테스트</h2>
+        <div class="split" style="flex: 1;">
+          <div class="card highlight">
+            <h3>핵심 정의</h3>
+            <div class="definition">정적 테스트는 테스트 대상을 실행하지 않는 방식으로 수행한다.</div>
+            <p class="lead">즉, 실행 결과보다 코드와 산출물 자체를 보고 이상을 찾는 접근이에요.</p>
+          </div>
+          <div class="note">
+            <h3>실무 의미</h3>
+            <ul class="list">
+              <li>구현 초기에 결함을 빠르게 찾을 수 있습니다.</li>
+              <li>코드 실행 환경이 준비되기 전에도 수행 가능합니다.</li>
+              <li>리뷰, 표준 준수 점검, 복잡도 분석과 연결됩니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">16 / 49</span>
+      </div>
+      <div class="content">
+        <h2>정적 테스트 유형</h2>
+        <div class="grid3" style="flex: 1;">
+          <div class="card">
+            <h3>코딩 표준</h3>
+            <p class="lead">MISRA-C 등의 표준 코딩에 대한 준수 여부 검사</p>
+          </div>
+          <div class="card">
+            <h3>복잡도 측정</h3>
+            <p class="lead">사이클로매틱 복잡도 등, 프로그램의 복잡도 측정</p>
+          </div>
+          <div class="card">
+            <h3>자료 흐름 분석</h3>
+            <p class="lead">프로그램 자료 흐름에 이상 존재 여부 분석</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">17 / 49</span>
+      </div>
+      <div class="content">
+        <h2>리뷰(Review)</h2>
+        <div class="definition">소프트웨어의 다양한 산출물에 존재하는 결함을 검출 또는 진행상황을 점검하기 위한 활동</div>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 20%;">리뷰 유형</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>관리 리뷰</strong></td><td>• 프로젝트 진행 상황에 대한 검토를 바탕으로 일정, 인력, 범위 등에 대한 통제 및 의사결정 지원</td></tr>
+              <tr><td><strong>기술 리뷰</strong></td><td>• 정의된 계획 및 명세를 준수하고 있는지에 대한 검토 수행</td></tr>
+              <tr><td><strong>인스펙션</strong></td><td>• 문제(Anomaly)를 식별하고 문제에 대한 올바른 해결(Resolution)을 검증</td></tr>
+              <tr><td><strong>워크쓰루</strong></td><td>• 문제를 식별하고 더 나아가서 대안조사, 개선활동, 학습 기회 제공을 수행</td></tr>
+              <tr><td><strong>감사</strong></td><td>• 객관적인 표준과 규제에 대한 준수를 독립적으로 평가</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">18 / 49</span>
+      </div>
+      <div class="content">
+        <h2>동적 테스트</h2>
+        <div class="split" style="flex: 1;">
+          <div class="card highlight">
+            <h3>핵심 정의</h3>
+            <div class="definition">동적 테스트는 테스트 대상을 실행하여 결함을 검출하는 방식이며, 적절한 입력값 즉 테스트 케이스를 결정해야 한다.</div>
+          </div>
+          <div class="card">
+            <h3>이 장에서 다룰 것</h3>
+            <ul class="list">
+              <li>경험 기반 테스트(Heuristic 기반 테스트)</li>
+              <li>명세 기반 테스트(Black-Box)</li>
+              <li>상태 전이 테스트</li>
+              <li>구조 기반 테스트와 커버리지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">19 / 49</span>
+      </div>
+      <div class="content">
+        <h2>경험 기반 테스트(Heuristic 기반 테스트)</h2>
+        <div class="definition">지식이나 경험으로 테스트 케이스를 도출하는 방법</div>
+        <div class="grid3" style="flex: 1;">
+          <div class="card">
+            <h3>탐색적 테스트</h3>
+            <ul class="mini-list">
+              <li>테스트 차터(Test Charter)</li>
+              <li>Time-Boxing</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>오류 추정</h3>
+            <ul class="mini-list">
+              <li>가능한 결함 나열</li>
+              <li>이런 유형의 결함을 공격할 수 있는 테스트 설계</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>체크리스트 테스트</h3>
+            <ul class="mini-list">
+              <li>테스트 및 평가할 내용 나열</li>
+              <li>체크리스트 기반으로 테스트</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">20 / 49</span>
+      </div>
+      <div class="content">
+        <h2>명세 기반 테스트(Black-Box) 개요</h2>
+        <div class="grid2" style="flex: 1;">
+          <div class="card">
+            <ul class="list">
+              <li>동등 분할 기법</li>
+              <li>경계 값 분석</li>
+              <li>결정 테이블</li>
+              <li>상태 전이 테스트</li>
+            </ul>
+          </div>
+          <div class="note">
+            <h3>핵심 관점</h3>
+            <ul class="list">
+              <li>내부 코드 구조보다 입력과 출력의 관계를 중심으로 봅니다.</li>
+              <li>요구사항과 명세가 충실할수록 명세 기반 테스트 품질도 높아집니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">21 / 49</span>
+      </div>
+      <div class="content">
+        <h2>동등 분할 기법</h2>
+        <div class="card" style="flex: 1;">
+          <ul class="list">
+            <li>대표 값을 이용한 테스트 케이스 도출 기법</li>
+            <li>특정 입력 값이 같은 결과 값을 출력할 경우, 이러한 범위를 하나의 클래스로 간주</li>
+            <li>각 클래스의 원소 중 대푯값을 하나 선택하여 테스트 케이스 작성</li>
+            <li>유효하지 않은 데이터도 포함 가능</li>
+            <li>모든 테스트 레벨에서 적용 가능</li>
+          </ul>
+        </div>
+        <div class="band">동등 분할의 목적은 모든 입력을 다 시험하는 대신, 같은 동작을 보일 가능성이 높은 입력군을 대표값으로 묶는 거예요.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">22 / 49</span>
+      </div>
+      <div class="content">
+        <h2>경계 값 분석</h2>
+        <div class="card" style="flex: 1;">
+          <ul class="list">
+            <li>동등 분할의 경계 부분에 해당하는 입력 값을 테스트 케이스로 작성</li>
+            <li>최대 값과 최소 값은 그 영역의 경계 값이 됨</li>
+            <li>결함은 경계 값 근처에서 많이 발생한다는 점을 이용</li>
+            <li>경계 값 분석은 모든 테스트 레벨에서 적용 가능</li>
+          </ul>
+        </div>
+        <div class="band">실무에서는 대표값만 보면 놓치는 경우가 많기 때문에, 경계 값 분석은 동등 분할과 거의 항상 같이 사용됩니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">23 / 49</span>
+      </div>
+      <div class="content">
+        <h2>결정 테이블</h2>
+        <div class="grid2" style="flex: 1;">
+          <div class="card">
+            <ul class="list">
+              <li>입력 조건에 따른 기대 결과의 참/거짓을 테스트 케이스로 도출</li>
+              <li>논리적인 조건이나 상황을 구현하는 시스템에서 요구 사항 도출 또는 내부 시스템 설계를 문서화하는데 유용</li>
+              <li>결정 테이블의 각 컬럼당 하나 이상의 테스트 케이스를 생성</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>장점과 단점</h3>
+            <ul class="mini-list">
+              <li>장점: 논리적으로 의존적인 가능한 모든 조건들의 조합을 생성</li>
+              <li>단점: 작성에 많은 시간 소요, 복잡한 시스템 표현 어려움, 실수 가능성</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">24 / 49</span>
+      </div>
+      <div class="content">
+        <h2>결정 테이블 예제: 조건 정의</h2>
+        <div class="definition">16세에서 65세 사이의 그룹은 세금을 낸다. 소득이 20,000달러 미만인 사람은 20%, 그 외의 사람은 50% 세금을 낸다. 만약 아이가 있다면 10% 감세를 받는다.</div>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th class="left">속성</th>
+                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="left">나이 16~65</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr><td class="left">소득 &lt; 20,000</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+              <tr><td class="left">자녀</td><td>Y</td><td>N</td><td>Y</td><td>N</td><td>Y</td><td>N</td><td>Y</td><td>N</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tiny">테스트 조건 - 가능한 모든 조합 생성</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">25 / 49</span>
+      </div>
+      <div class="content">
+        <h2>결정 테이블 예제: 예상 결과</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th class="left">속성</th>
+                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="left">세금 20%</td><td>O</td><td>O</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+              <tr><td class="left">세금 50%</td><td></td><td></td><td>O</td><td>O</td><td></td><td></td><td></td><td></td></tr>
+              <tr><td class="left">감세 10%</td><td>O</td><td></td><td>O</td><td></td><td></td><td></td><td></td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="band">이 슬라이드는 각 조합에서 기대되는 세율과 감세 조건을 분리해서 보여줍니다. 결정 테이블의 핵심은 조건과 결과의 매핑을 구조화하는 데 있습니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">26 / 49</span>
+      </div>
+      <div class="content">
+        <h2>결정 테이블 예제: 테스트 케이스 도출</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th class="left">속성</th>
+                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="left">나이 16~65</td><td>16</td><td>65</td><td>30</td><td>64</td><td>15</td><td>66</td><td>99</td><td>1</td></tr>
+              <tr><td class="left">소득 &lt; 20,000</td><td>19,999</td><td>15,000</td><td>20,000</td><td>99,000</td><td>1,000</td><td>10,000</td><td>21,000</td><td>30,000</td></tr>
+              <tr><td class="left">자녀</td><td>Y</td><td>N</td><td>Y</td><td>N</td><td>Y</td><td>N</td><td>Y</td><td>N</td></tr>
+              <tr><td class="left">기대 결과</td><td>소득 * 20% * 90%</td><td>소득 * 20%</td><td>소득 *50% * 90%</td><td>소득 * 50%</td><td>0%</td><td>0%</td><td>0%</td><td>0%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">27 / 49</span>
+      </div>
+      <div class="content">
+        <h2>상태 전이 테스트</h2>
+        <div class="card" style="flex: 1;">
+          <ul class="list">
+            <li>테스트 대상 시스템이나 객체의 상태를 구분하고, 이벤트에 의해 어느 한 상태에서 다른 상태로 전이되는 경우의 수를 테스트 케이스로 구성하는 테스트 설계 기법</li>
+            <li>상태를 중심으로 시스템을 이해하기 때문에 이벤트 기반 동작을 설명하기 좋습니다.</li>
+          </ul>
+        </div>
+        <div class="band">상태 전이 테스트는 단순 입력/출력만 보는 것이 아니라 “현재 상태에서 어떤 이벤트가 들어오면 무엇으로 바뀌는가”를 보는 기법이에요.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">28 / 49</span>
+      </div>
+      <div class="content">
+        <h2>상태 전이 테스트 절차</h2>
+        <div class="flow" style="flex: 1;">
+          <div class="flow-box"><strong>1</strong><span>상태 전이 다이어그램 작성</span></div>
+          <div class="flow-box"><strong>2</strong><span>상태 이벤트 테이블 작성</span></div>
+          <div class="flow-box"><strong>3</strong><span>상태 전이 트리 작성</span></div>
+          <div class="flow-box"><strong>4</strong><span>테스트 케이스 작성</span></div>
+          <div class="flow-box"><strong>5</strong><span>테스트 시나리오 구성</span></div>
+        </div>
+        <div class="band">상태 전이 테스트는 다이어그램만 그리고 끝나는 것이 아니라, 테이블과 트리, 케이스, 시나리오까지 단계적으로 이어져야 합니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">29 / 49</span>
+      </div>
+      <div class="content">
+        <h2>상태 다이어그램의 UML 표기법</h2>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 18%;">요소</th>
+                <th style="width: 42%;">설명</th>
+                <th>표기법</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>상태</strong></td><td>하나 또는 그 이상의 이벤트를 기다리는 시스템 모드</td><td>원, 원 안에 상태 표기</td></tr>
+              <tr><td><strong>전이</strong></td><td>이벤트에 의해 한 가지 상태에서 다른 상태로의 변경</td><td>화살표</td></tr>
+              <tr><td><strong>이벤트</strong></td><td>상태의 전이를 유발하는 요인</td><td>화살표에 이름과 같은 값으로 표시<br />ex) ev취소</td></tr>
+              <tr><td><strong>가드</strong></td><td>이벤트가 발생하는 조건</td><td>이벤트 오른 편의 [] 안에 조건이나 값으로 표시<br />ex) ev금액 투입[투입 금액 &lt; 가격]</td></tr>
+              <tr><td><strong>액션</strong></td><td>상태의 전이에 따라 유발되는 동작</td><td>화살표에 이름과 값으로 표시<br />ex) ev취소/투입 금액 반환</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">30 / 49</span>
+      </div>
+      <div class="content">
+        <h2>상태 전이 테스트 예제: 다이어그램</h2>
+        <div class="split" style="flex: 1;">
+          <div class="image-card">
+            <img src="./png/image1.png" alt="상태 전이 다이어그램" loading="lazy" />
+            <p class="caption">상태 전이 테스트 절차에 따라 상태 전이 다이어그램에서 테스트 시나리오 도출</p>
+          </div>
+          <div class="card">
+            <h3>예제 포인트</h3>
+            <ul class="list">
+              <li>대기, 곡 재생, 전원 꺼짐 상태를 중심으로 봅니다.</li>
+              <li>재생, 정지, 전원 켬, 전원 끔 이벤트가 상태를 어떻게 바꾸는지 추적합니다.</li>
+              <li>이 그림은 이후 상태 이벤트 테이블과 테스트 케이스의 출발점이에요.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">31 / 49</span>
+      </div>
+      <div class="content">
+        <h2>상태 이벤트 테이블 작성</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th class="left"></th>
+                <th>ev.재생</th>
+                <th>ev.정지</th>
+                <th>ev.전원 켬</th>
+                <th>ev.전원 끔</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="left">대기(S1)</td><td>곡 재생(S2)</td><td></td><td></td><td>전원 꺼짐(S3)</td></tr>
+              <tr><td class="left">곡 재생(S2)</td><td></td><td>대기(S1)</td><td></td><td>전원 꺼짐(S3)</td></tr>
+              <tr><td class="left">전원 꺼짐(S3)</td><td></td><td></td><td>대기(S1)</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="band">이 표는 각 상태에서 허용되는 이벤트와 결과 상태를 요약합니다. 비어 있는 칸은 비유효 이벤트 후보가 됩니다.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">32 / 49</span>
+      </div>
+      <div class="content">
+        <h2>상태 전이 트리 작성</h2>
+        <div class="split" style="flex: 1;">
+          <div class="image-card">
+            <img src="./png/image2.png" alt="상태 전이 트리" loading="lazy" />
+            <p class="caption">상태 전이 트리는 가능한 전이 경로를 계층적으로 보는 데 적합합니다.</p>
+          </div>
+          <div class="card">
+            <h3>왜 트리가 필요한가</h3>
+            <ul class="list">
+              <li>상태 다이어그램은 전체 구조를 보여주고, 트리는 실제 탐색 경로를 보여줍니다.</li>
+              <li>시나리오를 만들 때 어떤 전이를 어떤 순서로 연결할지 시각적으로 정리할 수 있습니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">33 / 49</span>
+      </div>
+      <div class="content">
+        <h2>유효 테스트 케이스 구성</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>ID</th>
+                <th>상태</th>
+                <th>이벤트</th>
+                <th>기대결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>유효 테스트 케이스</td><td>V01</td><td>대기(S1)</td><td>ev.재생</td><td>곡 재생(S2)</td></tr>
+              <tr><td></td><td>V02</td><td>대기(S1)</td><td>ev.전원 끔</td><td>전원 꺼짐(S3)</td></tr>
+              <tr><td></td><td>V03</td><td>곡 재생(S2)</td><td>ev.정지</td><td>대기(S1)</td></tr>
+              <tr><td></td><td>V04</td><td>곡 재생(S2)</td><td>ev.전원 끔</td><td>전원 꺼짐(S3)</td></tr>
+              <tr><td></td><td>V05</td><td>전원 꺼짐(S3)</td><td>ev.전원켬</td><td>대기(S1)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">34 / 49</span>
+      </div>
+      <div class="content">
+        <h2>비유효 테스트 케이스 구성</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>ID</th>
+                <th>상태</th>
+                <th>이벤트</th>
+                <th>기대결과</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>비유효 테스트 케이스</td><td>IV01</td><td>대기(S1)</td><td>ev.정지</td><td>상태유지</td></tr>
+              <tr><td></td><td>IV02</td><td>대기(S1)</td><td>ev.전원켬</td><td>상태유지</td></tr>
+              <tr><td></td><td>IV03</td><td>곡 재생(S2)</td><td>ev.재생</td><td>상태유지</td></tr>
+              <tr><td></td><td>IV04</td><td>곡 재생(S2)</td><td>ev.전원켬</td><td>상태유지</td></tr>
+              <tr><td></td><td>IV05</td><td>전원 꺼짐(S3)</td><td>ev.재생</td><td>상태유지</td></tr>
+              <tr><td></td><td>IV06</td><td>전원 꺼짐(S3)</td><td>ev.정지</td><td>상태유지</td></tr>
+              <tr><td></td><td>IV07</td><td>전원 꺼짐(S3)</td><td>ev.전원 끔</td><td>상태유지</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">35 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 시나리오 구성</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 16%;">ID</th>
+                <th>시나리오(순서)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>TP01</td><td class="left">V01, V03, V01, IV03, V04, IV05, IV07, V05, V02, IV06</td></tr>
+              <tr><td>TP02</td><td class="left">V05, V01, IV04, V03, IV01, V02</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="band">시나리오는 단일 테스트 케이스를 시간 순서로 연결한 거예요. 따라서 상태 전이 테스트는 케이스 설계와 시나리오 설계가 모두 필요해요.</div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">36 / 49</span>
+      </div>
+      <div class="content">
+        <h2>구조 기반 테스트</h2>
+        <div class="grid2" style="flex: 1;">
+          <div class="card">
+            <h3>정의</h3>
+            <ul class="list">
+              <li>커버리지: 시스템 또는 소프트웨어의 구조가 테스트 묶음에 의해 테스트된 정보</li>
+              <li>구조 기반 테스트는 내부 구조가 얼마나 테스트되었는지를 따집니다.</li>
+            </ul>
+          </div>
+          <div class="note">
+            <h3>핵심 질문</h3>
+            <ul class="list">
+              <li>실행되었는가?</li>
+              <li>참과 거짓이 모두 검증되었는가?</li>
+              <li>개별 조건이 독립적으로 결과에 영향을 주는가?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">37 / 49</span>
+      </div>
+      <div class="content">
+        <h2>커버리지 유형</h2>
+        <div class="table-wrap tight" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 28%;">구분</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>구문 커버리지</strong></td><td>전체 구문 중 실행된 구문이 몇 퍼센트인지 측정</td></tr>
+              <tr><td><strong>결정 커버리지</strong></td><td>전체 조건식이 참, 거짓 각각 최소 한번씩 실행되면 충족</td></tr>
+              <tr><td><strong>조건 커버리지</strong></td><td>개별 조건식을 기준으로 참, 거짓 각각 한번씩 실행되면 충족</td></tr>
+              <tr><td><strong>조건/결정 커버리지</strong></td><td>전체 조건식과 개별 조건식 모두 각각 참, 거짓을 한번씩 실행되면 충족</td></tr>
+              <tr><td><strong>변경 조건/결정 커버리지(MC/DC)</strong></td><td>각 개별 조건식이 다른 개별 조건식과 무관하게 전체 조건식의 결과에 독립적으로 영향을 주도록 실행되면 충족</td></tr>
+              <tr><td><strong>다중 조건 커버리지</strong></td><td>모든 개별 조건식의 모든 가능한 논리적인 조합을 고려하여 100% 커버리지 보장</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tiny">MC/DC 주석: 결정 포인트 = 0, A = 0, B = 0 조합은 A, B가 각각 독립적으로 1로 변경되어도 결정 포인트에는 영향이 없음으로 제외</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">39 / 49</span>
+      </div>
+      <div class="content">
+        <h2>구조 기반 테스트 예시</h2>
+        <div class="split" style="flex: 1;">
+          <div class="card">
+<pre class="code">//예시
+
+if (A &amp; B){
+	return 1;
+}else{
+	return 2;
+}</pre>
+            <p class="lead">A, B는 각각 개별 조건식</p>
+            <p class="lead">if (A &amp; B)는 전체 조건식</p>
+          </div>
+          <div class="image-card">
+            <img src="./png/image3.png" alt="커버리지 설명 이미지" loading="lazy" />
+            <p class="caption">구문, 결정, 조건, 조건/결정, MC/DC, 다중 조건 커버리지의 차이를 시각적으로 이해하는 보조 이미지</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">40 / 49</span>
+      </div>
+      <div class="content">
+        <h2>커버리지 유형별 조합</h2>
+        <div class="table-wrap dense" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>결정 포인트</th>
+                <th>A</th>
+                <th>B</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="left">구문 커버리지</td><td>(실행된 구문수/전체구문수)*100</td><td></td><td></td></tr>
+              <tr><td class="left">결정 커버리지</td><td>0</td><td>1</td><td>0</td></tr>
+              <tr><td class="left"></td><td>1</td><td>1</td><td>1</td></tr>
+              <tr><td class="left">조건 커버리지</td><td>0</td><td>1</td><td>0</td></tr>
+              <tr><td class="left"></td><td>0</td><td>0</td><td>1</td></tr>
+              <tr><td class="left">조건/결정 커버리지</td><td>0</td><td>0</td><td>0</td></tr>
+              <tr><td class="left"></td><td>1</td><td>1</td><td>1</td></tr>
+              <tr><td class="left">변경 조건/결정 커버리지(MC/DC)</td><td>0</td><td>1</td><td>0</td></tr>
+              <tr><td class="left"></td><td>0</td><td>0</td><td>1</td></tr>
+              <tr><td class="left"></td><td>1</td><td>1</td><td>1</td></tr>
+              <tr><td class="left">다중 조건 커버리지</td><td>1</td><td>1</td><td>1</td></tr>
+              <tr><td class="left"></td><td>0</td><td>1</td><td>0</td></tr>
+              <tr><td class="left"></td><td>0</td><td>0</td><td>1</td></tr>
+              <tr><td class="left"></td><td>0</td><td>0</td><td>0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">41 / 49</span>
+      </div>
+      <div class="content">
+        <h2>구조 기반 커버리지 예제</h2>
+        <div class="split" style="flex: 1;">
+          <div class="card">
+<pre class="code">//예시
+
+if (A | B){
+	return 1;
+}else{
+	return 2;
+}</pre>
+          </div>
+          <div class="table-wrap dense">
+            <table>
+              <thead>
+                <tr>
+                  <th>A</th>
+                  <th>B</th>
+                  <th>OR</th>
+                  <th>결정</th>
+                  <th>조건</th>
+                  <th>조건/결정</th>
+                  <th>MC/DC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>1</td><td>1</td><td><strong>1</strong></td><td>O</td><td>O</td><td>O</td><td></td></tr>
+                <tr><td>1</td><td>0</td><td><strong>1</strong></td><td></td><td></td><td></td><td>O</td></tr>
+                <tr><td>0</td><td>1</td><td><strong>1</strong></td><td></td><td></td><td></td><td>O</td></tr>
+                <tr><td>0</td><td>0</td><td><strong>0</strong></td><td>O</td><td>O</td><td>O</td><td>O</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">42 / 49</span>
+      </div>
+      <div class="content">
+        <h2>회귀(Regression) 테스트</h2>
+        <div class="definition">유지 보수 단계에서 소프트웨어가 수정된 후에 변경이 올바르게 되었는지 검사하기 위한 테스트</div>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 24%;">테스트 방식</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Retest-All</strong></td><td>• 기존에 개발된 모든 테스트 케이스를 사용하는 방식</td></tr>
+              <tr><td><strong>선택적 리그레션 테스트</strong></td><td>• 기존의 테스트 케이스 중에서 일부만 선정<br />• 전후 서로 다른 경과를 출력할 가능성이 있는 테스트 케이스를 식별하여 수행</td></tr>
+              <tr><td><strong>테스트 최소화</strong></td><td>• 중복된 테스트 케이스를 제거하여 테스트 케이스의 수를 줄이는 방식</td></tr>
+              <tr><td><strong>테스트 우선 순위화</strong></td><td>• 테스트 케이스에 우선 순위를 두어 우선 순위가 높은 테스트 케이스를 활용하는 방식</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">43 / 49</span>
+      </div>
+      <div class="content">
+        <h2>비기능 테스트</h2>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 28%;">테스트 유형</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>사용성 테스트(Usability Test)</strong></td><td>• 소프트웨어를 쉽게 사용할 수 있는 정도, 편의 기능 제공 정도를 측정하고 확인하는 테스트</td></tr>
+              <tr><td><strong>성능 테스트(Performance Test)</strong></td><td>• 시스템에 부하를 주면서 응답 시간, 처리량, 속도 등 성능 지표 추이 측정</td></tr>
+              <tr><td><strong>회복 테스트(Recovery Test)</strong></td><td>• 문제가 발생했을 때, 복귀 능력 검증</td></tr>
+              <tr><td><strong>보안 테스트(Security Test)</strong></td><td>• 외부의 침입이나 해킹에 대응하는 능력 검증</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">3. 테스트 방법</span>
+        <span class="page">44 / 49</span>
+      </div>
+      <div class="content">
+        <h2>성능 테스트</h2>
+        <div class="definition">유지 보수 단계에서 소프트웨어가 수정된 후에 변경이 올바르게 되었는지 검사하기 위한 테스트</div>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 26%;">종류</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>부하 테스트(Load Test)</strong></td><td>• 사전에 결정된 Peak 시점의 부하 상황에서 시스템의 성능을 검증 (적정 부하 유지 여부 판별)</td></tr>
+              <tr><td><strong>스트레스 테스트(Stress Test)</strong></td><td>• 시스템 처리 능력 이상의 부하, 즉 임계점 이상의 부하를 가하여 비정상적인 상황에서 처리를 테스트 (적정 부하 2배 유지)</td></tr>
+              <tr><td><strong>내구성 테스트(Endurance Test)</strong></td><td>• 오랜 시간 동안 시스템에 높은 부하를 가하여 시스템의 반응을 파악. 메모리 누수 감지 등 (8시간 이상의 장시간 부하)</td></tr>
+              <tr><td><strong>스파이크 테스트(Spike Test)</strong></td><td>• 갑작스런 사용량 급증에 대한 테스트 (순간적인 대량 부하)</td></tr>
+              <tr><td><strong>시스템 중단점 테스트(Breakpoint Test)</strong></td><td>• 동시 단말 사용자의 수를 점진적으로 증가시켜, 시스템의 장애 지점을 결정</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">4. 테스트 프로세스</span>
+        <span class="page">45 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 프로세스와 ISO/IEC/IEEE 29119</h2>
+        <div class="grid2" style="flex: 1;">
+          <div class="card highlight">
+            <h3>ISO/IEC/IEEE 29119</h3>
+            <ul class="list">
+              <li>Concepts and Vocabulary</li>
+              <li>Testing Process</li>
+              <li>Testing Documentation</li>
+              <li>Testing Technique</li>
+              <li>Keyword. Driven Testing</li>
+            </ul>
+          </div>
+          <div class="note">
+            <h3>핵심 메시지</h3>
+            <ul class="list">
+              <li>성공적인 테스트를 위해 효과적인 테스트 접근 방법뿐만 아니라 체계적인 테스트 수행을 위한 계획 수립과 관리 필요</li>
+              <li>즉, 테스트는 기법만의 문제가 아니라 프로세스와 관리의 문제이기도 합니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">4. 테스트 프로세스</span>
+        <span class="page">46 / 49</span>
+      </div>
+      <div class="content">
+        <h2>테스트 프로세스 개요</h2>
+        <div class="grid3" style="flex: 1;">
+          <div class="card">
+            <h3>조직 테스트 프로세스</h3>
+            <ul class="mini-list">
+              <li>조직 테스트 명세 개발</li>
+              <li>조직 테스트 명세 활용 모니터링 및 제어</li>
+              <li>조직 테스트 명세 갱신</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>테스트 관리 프로세스</h3>
+            <ul class="mini-list">
+              <li>테스트 계획</li>
+              <li>테스트 모니터링 및 제어</li>
+              <li>테스트 종료</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>동적 테스트 프로세스</h3>
+            <ul class="mini-list">
+              <li>테스트 설계 및 구현</li>
+              <li>테스트 환경 구축 및 관리</li>
+              <li>테스트 실행</li>
+              <li>결함 보고</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">4. 테스트 프로세스</span>
+        <span class="page">47 / 49</span>
+      </div>
+      <div class="content">
+        <h2>조직 테스트 프로세스와 정책 명세</h2>
+        <div class="split" style="flex: 1;">
+          <div class="card">
+            <h3>조직 테스트 프로세스</h3>
+            <div class="definition">조직 전체에서 수행될 모든 테스트 프로젝트의 공통적인 사항을 정의하는 데 초점</div>
+            <ul class="mini-list">
+              <li>조직 테스트 명세 개발</li>
+              <li>조직 테스트 명세 활용 모니터링 및 제어</li>
+              <li>조직 테스트 명세 갱신</li>
+            </ul>
+          </div>
+          <div class="table-wrap dense">
+            <table>
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="left">테스트 목적</td><td class="left">• 조직에서의 테스트에 대한 목적, 목표, 테스트 범위 기술</td></tr>
+                <tr><td class="left">테스트 프로세스</td><td class="left">• 조직이 테스트를 수행할 때 준수할 테스트 프로세스 명시</td></tr>
+                <tr><td class="left">테스트 조직 및 역할</td><td class="left">• 테스트 활동을 수행하는 테스트 조직의 구조와 역할 정의</td></tr>
+                <tr><td class="left">테스트 표준</td><td class="left">• 테스트를 수행하면서 참고하고 준수해야 할 표준 정의</td></tr>
+                <tr><td class="left">테스트 자산 관리</td><td class="left">• 테스트 결과물을 축적하고 재사용하는 방법 정의</td></tr>
+                <tr><td class="left">테스트 프로세스 개선</td><td class="left">• 테스트 프로세스를 평가하고 개선하는 방법 정의</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="header">
+        <span class="chapter">4. 테스트 프로세스</span>
+        <span class="page">48 / 49</span>
+      </div>
+      <div class="content">
+        <h2>조직 테스트 전략 명세</h2>
+        <div class="table-wrap" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 24%;">항목</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>위험 관리</strong></td><td>• 테스트를 진행하면서 수행할 위험 관리 방법을 명시</td></tr>
+              <tr><td><strong>테스트 선택 및 우선 순위</strong></td><td>• 우선순위를 부여하고, 테스트를 선택하는 방법을 명시</td></tr>
+              <tr><td><strong>테스트 문서화</strong></td><td>• 테스트를 수행하면서 작성할 산출물을 명시</td></tr>
+              <tr><td><strong>형상 관리</strong></td><td>• 테스트 산출물에 대한 형상 관리 방법을 명시</td></tr>
+              <tr><td><strong>결함 관리</strong></td><td>• 검출된 결함을 종결시킬때까지의 관리 방법을 명시</td></tr>
+              <tr><td><strong>자동화 도구</strong></td><td>• 테스트 활동을 자동화하기 위한 도구들을 명시</td></tr>
+              <tr><td><strong>수행 개별 테스트</strong></td><td>• 레벨 테스트 및 유형 테스트 등 수행할 개발 테스트 명시</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide closing">
+      <div class="header">
+        <span class="chapter">4. 테스트 프로세스</span>
+        <span class="page">49 / 49</span>
+      </div>
+      <div class="content">
+        <div class="label-row">
+          <span class="chip">동적 테스트 프로세스</span>
+          <span class="chip">설계 및 구현</span>
+          <span class="chip">환경 구축 및 관리</span>
+          <span class="chip">테스트 실행</span>
+          <span class="chip">결함 보고</span>
+        </div>
+        <h2>동적 테스트 프로세스와 마무리</h2>
+        <div class="grid2" style="flex: 1;">
+          <div class="card">
+            <h3>동적 테스트 프로세스</h3>
+            <ul class="list">
+              <li><strong>테스트 설계 및 구현</strong>: 테스트 실행 프로세스에서 실행될 테스트 절차를 도출하고, 테스트 basis를 분석하여 테스트 요구 사항/조건/커버리지 기준 및 테스트 케이스 등을 도출</li>
+              <li><strong>테스트 환경 구축 및 관리</strong>: 테스트를 수행하는 데 필요한 테스트 환경 요건과 테스트 데이터 요건을 바탕으로 테스트 환경을 구축하고 테스트 데이터를 준비하여 테스트 실행이 진행되도록 지원</li>
+              <li><strong>테스트 실행</strong>: 테스트 설계 및 구현 활동에서 개발된 테스트 절차를 실행함으로써 수행</li>
+              <li><strong>결함 보고</strong>: 테스트 결과를 분석하여 식별한 결함을 관계자들에게 보고하고 결함 보고서를 업데이트</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>최종 정리</h3>
+            <ul class="list">
+              <li>요구사항은 테스트의 출발점이에요.</li>
+              <li>원칙은 테스트 설계의 사고 기준이에요.</li>
+              <li>기법은 입력, 상태, 구조를 서로 다른 관점에서 검증하게 해줍니다.</li>
+              <li>프로세스는 테스트 활동을 조직 수준에서 반복 가능하게 만듭니다.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+      var current = 0;
+
+      function render(index) {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        slides.forEach(function (slide, idx) {
+          var active = idx === current;
+          slide.classList.toggle("active", active);
+          slide.setAttribute("aria-hidden", String(!active));
+        });
+        document.title = "CSTS 소프트웨어 테스트 자료 정리 - " + (current + 1) + "/" + slides.length;
+      }
+
+      slides.forEach(function (slide, idx) {
+        var page = slide.querySelector(".page");
+        if (page) {
+          page.textContent = String(idx + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0");
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          render(current + 1);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          render(current - 1);
+        }
+      });
+
+      render(0);
+    })();
+  </script>
+</body>
+</html>

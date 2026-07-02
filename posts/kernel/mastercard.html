@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mastercard Kernel</title>
+  <style>
+    :root {
+      --bg: #5a6272;
+      --slide: #ffffff;
+      --ink: #111111;
+      --muted: #8f8f8f;
+      --line: #666666;
+      --table-border: #d3d3d3;
+      --table-head: #b7b7b7;
+      --table-head-dark: #8d8d8d;
+      --soft: #f8f8f8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 38%),
+        linear-gradient(180deg, #656d7d 0%, #545d6d 100%);
+      color: var(--ink);
+      font-family: "Segoe UI", "Noto Sans KR", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow: hidden;
+    }
+
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 104px 48px;
+    }
+
+    .viewer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      position: relative;
+      display: none;
+      width: min(1420px, calc(100vw - 248px));
+      aspect-ratio: 16 / 9;
+      background: var(--slide);
+      overflow: hidden;
+      box-shadow: 0 24px 55px rgba(0, 0, 0, 0.26);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    .top-line {
+      position: absolute;
+      left: 34px;
+      right: 34px;
+      top: 52px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .title {
+      position: absolute;
+      left: 50%;
+      top: 86px;
+      transform: translateX(-50%);
+      margin: 0;
+      font-size: clamp(34px, 2.7vw, 54px);
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .content {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      top: 176px;
+      bottom: 52px;
+      font-size: clamp(17px, 1.25vw, 24px);
+      line-height: 1.5;
+    }
+
+    .content.tight {
+      font-size: clamp(16px, 1.15vw, 22px);
+      line-height: 1.42;
+    }
+
+    .content.dense {
+      font-size: clamp(15px, 1.08vw, 21px);
+      line-height: 1.36;
+    }
+
+    .content p {
+      margin: 0 0 0.75em 0;
+    }
+
+    .lead {
+      margin-bottom: 0.65em;
+    }
+
+    .subhead {
+      margin: 0.55em 0 0.35em;
+      font-weight: 700;
+    }
+
+    .bullets,
+    .ordered {
+      margin: 0.15em 0 0.85em 0;
+      padding-left: 1.25em;
+    }
+
+    .bullets li,
+    .ordered li {
+      margin: 0.24em 0;
+    }
+
+    .bullets.tight li,
+    .ordered.tight li {
+      margin: 0.16em 0;
+    }
+
+    .table-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .table-med {
+      width: min(78%, 1060px);
+    }
+
+    .table-wide {
+      width: min(96%, 1250px);
+    }
+
+    th, td {
+      border: 1px solid var(--table-border);
+      padding: 0.56em 0.7em;
+      vertical-align: middle;
+      word-break: keep-all;
+    }
+
+    thead th {
+      background: var(--table-head);
+      font-weight: 700;
+    }
+
+    .table-dark thead th {
+      background: var(--table-head-dark);
+    }
+
+    .table-center td,
+    .table-center th {
+      text-align: center;
+    }
+
+    .note {
+      font-size: 0.8em;
+      color: #333;
+      margin-top: 0.55em;
+    }
+
+    .small {
+      font-size: 0.8em;
+    }
+
+    .tiny {
+      font-size: 0.72em;
+      line-height: 1.3;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 52px;
+      align-items: start;
+    }
+
+    .two-col .section-title {
+      font-weight: 700;
+      margin-bottom: 0.25em;
+    }
+
+    .flow-text {
+      white-space: pre-wrap;
+      margin: 0;
+      font-size: 0.96em;
+      line-height: 1.55;
+    }
+
+    .mono {
+      font-family: "Consolas", "SFMono-Regular", "Courier New", monospace;
+    }
+
+    .hero {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 0 10%;
+    }
+
+    .hero .sub {
+      margin-top: -2%;
+      color: #9f9f9f;
+      font-size: clamp(30px, 3vw, 60px);
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.12em;
+    }
+
+    .hero .main {
+      font-size: clamp(46px, 4.4vw, 88px);
+      line-height: 1.04;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      margin: 0;
+    }
+
+    .author-table {
+      position: absolute;
+      left: 50%;
+      bottom: 13.5%;
+      transform: translateX(-50%);
+      width: min(36%, 620px);
+      border-collapse: collapse;
+      font-size: clamp(13px, 0.92vw, 16px);
+    }
+
+    .author-table td {
+      border: 1px solid #bdbdbd;
+      padding: 0.48em 0.8em;
+      text-align: center;
+      width: 50%;
+    }
+
+    .summary-list {
+      margin-top: 0.35em;
+      counter-reset: item;
+    }
+
+    .summary-list li {
+      list-style: decimal;
+      margin: 0.35em 0 0.35em 1.25em;
+    }
+
+    .state-flow {
+      margin-top: 0.3em;
+      padding: 0.8em 1em;
+      border: 1px solid #d0d0d0;
+      background: #fafafa;
+    }
+
+    .kicker {
+      font-weight: 700;
+      margin-top: 0.5em;
+    }
+
+    .foot-right {
+      text-align: right;
+      margin-top: 0.45em;
+    }
+
+    .hud {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .counter {
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(17, 17, 17, 0.55);
+      color: #fff;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      backdrop-filter: blur(10px);
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.42);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .dot.active {
+      background: #ffffff;
+      transform: scale(1.15);
+    }
+
+    .nav-btn {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 6;
+      width: 60px;
+      height: 60px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #111;
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      line-height: 1;
+      user-select: none;
+    }
+
+    .nav-btn:hover {
+      background: #fff;
+    }
+
+    .nav-btn:active {
+      transform: translateY(-50%) scale(0.98);
+    }
+
+    .nav-btn.prev {
+      left: 28px;
+    }
+
+    .nav-btn.next {
+      right: 28px;
+    }
+
+    .hero-slide .top-line {
+      left: 44px;
+      right: 44px;
+    }
+
+    @media (max-width: 900px) {
+      .deck {
+        padding: 14px;
+      }
+
+      .slide {
+        width: calc(100vw - 28px);
+      }
+
+      .content {
+        left: 24px;
+        right: 24px;
+        top: 142px;
+        bottom: 28px;
+        font-size: 15px;
+      }
+
+      .top-line {
+        left: 24px;
+        right: 24px;
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .table-med,
+      .table-wide,
+      .author-table {
+        width: 100%;
+      }
+
+      .nav-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+      }
+
+      .nav-btn.prev {
+        left: 10px;
+      }
+
+      .nav-btn.next {
+        right: 10px;
+      }
+
+      .hud {
+        bottom: 10px;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck"></main>
+
+  <script>
+    const slides = [
+      {
+        type: "hero",
+        body: `
+          <div class="hero">
+            <div class="sub">EMV Contactless</div>
+            <div class="main">Mastercard Kernel</div>
+            <table class="author-table">
+              <tr>
+                <td>작성자 : 성현진</td>
+                <td>tjdguswls01@titeng.co.kr</td>
+              </tr>
+            </table>
+          </div>
+        `
+      },
+      {
+        title: "POS 시스템 구성",
+        body: `
+          <p class="lead">POS System = Terminal + Reader (논리적 분리)</p>
+          <p class="subhead">대표적인 Reader 구현 구조 예시:</p>
+          <ul class="bullets">
+            <li>Fully Integrated Terminal (단일 디바이스)</li>
+            <li>Intelligent Reader (Reader가 대부분 처리)</li>
+            <li>Terminal + Transparent Reader (Reader는 통신만)</li>
+          </ul>
+          <p>Intelligent Reader 구조를 기준으로 설명</p>
+        `
+      },
+      {
+        title: "Terminal vs Reader 역할 분리",
+        body: `
+          <p><strong>Terminal이 담당하는 것:</strong> 금액 결정, 거래 유형, UI, 결과 처리, 온라인 승인 요청</p>
+          <p><strong>Reader가 담당하는 것:</strong> Card 통신, Kernel 처리, 카드 데이터 처리, Outcome 및 거래 데이터 반환</p>
+          <p><strong>상호 통신:</strong> Signal 기반 서비스 요청 모델</p>
+        `
+      },
+      {
+        title: "Reader의 5개 프로세스",
+        body: `
+          <p>각 프로세스는 Queue를 갖고 Signal로 통신</p>
+          <div class="table-wrap">
+            <table class="table-med table-center">
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>내용</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Process M (Main)</td><td>RF 필드 제어, 전체 흐름 조율, 결과 처리</td></tr>
+                <tr><td>Process D (Display)</td><td>UI 메시지 표시</td></tr>
+                <tr><td>Process S (Select)</td><td>카드 Application 선택 (SELECT 커맨드)</td></tr>
+                <tr><td>Process P (PCD)</td><td>RF 통신 계층 (물리적 송수신)</td></tr>
+                <tr><td>Process K (Kernel)</td><td>핵심 트랜잭션 처리</td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+        `
+      },
+      {
+        title: "Process K (Kernel) 내부 구조",
+        body: `
+          <p>Kernel = 상태 머신(State Machine) + Kernel Database</p>
+          <p>Kernel Database 구성:</p>
+          <ul class="bullets">
+            <li>TLV Database (데이터 오브젝트)</li>
+            <li>CA Public Key Database</li>
+            <li>Certification Revocation List (CRL)</li>
+            <li>Scratch Pad (Torn Transaction Log 등)</li>
+          </ul>
+          <p>외부에서는 Kernel의 내부 구조가 아닌 외부 동작만 규정</p>
+        `
+      },
+      {
+        title: "Kernel 기능 개요",
+        body: `
+          <div class="table-wrap">
+            <table class="table-wide table-center">
+              <thead>
+                <tr>
+                  <th>기능</th>
+                  <th>설명</th>
+                  <th>기능</th>
+                  <th>설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>트랜잭션 모드</td><td>Mag-stripe / EMV Mode</td><td>Mobile CVM</td><td>모바일 기기 인증</td></tr>
+                <tr><td>Data Exchange</td><td>DEK/DET Signal</td><td>Balance Reading</td><td>카드 잔액 조회</td></tr>
+                <tr><td>Data Storage</td><td>SDS / IDS</td><td>Relay Resistance Protocol</td><td>릴레이 공격 방지</td></tr>
+                <tr><td>Torn Transaction Recovery</td><td>중단 트랜잭션 복구</td><td>CDA 미사용 거래 최적화</td><td>CDA가 사용되지 않는 거래에서는 거래에 필요한 최소 데이터가 확보되면 추가 레코드 읽기를 생략</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Implementation Options: MAG, IDS/TORN 두 옵션의 적용 여부에 따라 4가지 Kernel 구현 조합 가능</p>
+        `
+      },
+      {
+        title: "트랜잭션 흐름 개요 (Simple)",
+        body: `
+          <p class="lead">단순 결제 흐름 (Mag-stripe 또는 EMV Mode):</p>
+          <p class="flow-text mono">Terminal → Reader: ACT Signal (금액 등 전달)
+Process S: SELECT → Application 선택
+Process K: GPO → Record 읽기 → Generate AC(EMV) / COMPUTE CRYPTOGRAPHIC CHECKSUM(Mag-stripe)
+Reader → Terminal: OUT Signal (결과 전달)
+Terminal: 온라인/오프라인 승인 결정</p>
+        `
+      },
+      {
+        title: "트랜잭션 흐름 개요 (Complex)",
+        body: `
+          <p class="lead">복잡한 트랜잭션에서의 DEK/DET Signal:</p>
+          <p><strong>DEK Signal:</strong> Kernel → Terminal (데이터 전송, 데이터 요청)</p>
+          <p><strong>DET Signal:</strong> Terminal → Kernel (데이터 갱신, Kernel DB 업데이트, 카드에 쓸 데이터 지정)</p>
+          <p>거래 진행 중 Terminal이 Kernel 데이터베이스와 처리 흐름에 영향을 주는 핵심 표준 채널은 DET Signal이다.</p>
+        `
+      },
+      {
+        title: "트랜잭션 모드: Mag-stripe vs EMV Mode",
+        body: `
+          <div class="two-col">
+            <div>
+              <p class="section-title">Mag-stripe Mode:</p>
+              <ul class="bullets tight">
+                <li>Track 1/2 Equivalent Data 기반 데이터 생성</li>
+                <li>UN, ATC, CVC3를 Track 데이터에 반영</li>
+                <li>GENERATE AC 대신 CCC를 사용</li>
+                <li>Kernel은 Online Request Outcome을 반환</li>
+              </ul>
+            </div>
+            <div>
+              <p class="section-title">EMV Mode:</p>
+              <ul class="bullets tight">
+                <li>Application Cryptogram(TC / ARQC / AAC) 기반 처리</li>
+                <li>필요 시 CDA 수행</li>
+                <li>카드와 단말 조건에 따라 온라인 요청 또는 오프라인 결과 처리</li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Data Exchange (DEK / DET)",
+        body: `
+          <p>Kernel이 Terminal과 직접 데이터를 주고받는 메커니즘</p>
+          <div class="two-col">
+            <div>
+              <p class="section-title">DEK Signal (Kernel → Terminal):</p>
+              <ul class="bullets tight">
+                <li>Data Needed: 필요한 데이터 태그 목록</li>
+                <li>Data To Send: 전송할 데이터</li>
+              </ul>
+            </div>
+            <div>
+              <p class="section-title">DET Signal (Terminal → Kernel):</p>
+              <ul class="bullets tight">
+                <li>Kernel DB 업데이트</li>
+                <li>카드에 쓸 데이터 지정</li>
+                <li>특정 태그 데이터 조회 요청</li>
+              </ul>
+            </div>
+          </div>
+          <p>주요 활용: IDS 데이터 처리, Balance 표시, 동적 설정</p>
+        `
+      },
+      {
+        title: "Data Storage: SDS (Standalone)",
+        body: `
+          <p>카드를 간단한 데이터 저장소로 활용</p>
+          <p class="section-title">Standalone Data Storage (SDS):</p>
+          <ul class="bullets tight">
+            <li>독립적 쓰기/읽기</li>
+            <li>GET DATA + PUT DATA 커맨드 사용</li>
+            <li>EMV Mode 거래 흐름에서 GET DATA와 PUT DATA를 이용해 데이터를 읽고 쓴다.</li>
+            <li>Payment System이 정의한 비결제 데이터 태그를 읽고 쓰는 용도로 사용</li>
+          </ul>
+          <p class="tiny">※ SDS와 IDS는 Mag-stripe Mode에는 적용되지 않음</p>
+        `
+      },
+      {
+        title: "Data Storage: IDS (Integrated)",
+        body: `
+          <p>Integrated Data Storage (IDS): 트랜잭션 흐름에 통합</p>
+          <ul class="bullets tight">
+            <li>PDOL에 DS Requested Operator ID를 포함한 GPO 요청</li>
+            <li>카드의 GPO 응답에서 DS ODS Card, DS Summary 1, 슬롯 관리 정보를 수신</li>
+            <li>DEK Signal로 Terminal에 전달</li>
+            <li>Terminal이 슬롯 업데이트 결정 → DET Signal로 반환</li>
+            <li>GENERATE AC 데이터 필드에 CDOL1 Related Data 뒤로 DSDOL Related Data를 추가</li>
+            <li>카드가 데이터 저장 여부 결정 및 DS Summary 2, 3 반환</li>
+          </ul>
+          <p>보안: DS Summary 1/2/3으로 저장 전후 상태를 비교한다.</p>
+          <p class="tiny">CDA가 수행되는 경우 DS Summary 2와 DS Summary 3은 CDA 서명에 포함되어 무결성 검증에 사용된다.</p>
+        `
+      },
+      {
+        title: "Torn Transaction Recovery",
+        body: `
+          <p>문제: GENERATE AC 수행 중 카드 이탈, Timeout, 전송 오류 또는 프로토콜 오류가 발생해 응답을 받지 못한 거래 복구</p>
+          <p class="section-title">복구 메커니즘:</p>
+          <ol class="ordered tight">
+            <li>Torn Transaction Log에 미완성 거래 기록 저장</li>
+            <li>재탭 후 Application PAN과 PAN Sequence Number를 기준으로 Torn Transaction Log에서 이전 거래를 검색</li>
+            <li>일치하는 로그가 있으면 DRDOL Related Data를 사용해 RECOVER AC를 전송하고, 이전 GENERATE AC 처리 결과를 복구한다.</li>
+          </ol>
+          <p class="tiny">로그 파라미터: Max Life Time, Max Number of Records</p>
+          <p class="tiny">※ EMV Mode 전용 (Mag-stripe Mode에는 미적용)</p>
+        `
+      },
+      {
+        title: "Mobile CVM",
+        body: `
+          <p>모바일 기기 트랜잭션의 특수성: 기기 자체에서 카드홀더 인증 가능</p>
+          <p class="section-title">두 가지 구분:</p>
+          <ul class="bullets tight">
+            <li>On-device CVM을 지원하지 않는 경우: EMV Mode에서는 CVM List 기반으로 처리하고, Mag-stripe Mode에서는 Terminal에 CVM 처리를 위임</li>
+            <li>On-device CVM을 카드와 Kernel이 모두 지원하는 경우: Kernel은 CVM 처리를 모바일 기기에 위임하고, 모바일용 Reader Contactless Transaction Limit을 적용한다.</li>
+          </ul>
+          <p>거래 금액이 Reader CVM Required Limit을 초과하면 Kernel은 모바일 기기에 CVM 필요 상태를 전달한다.</p>
+          <p>Mobile Mag-stripe Mode / Mobile EMV Mode 각각 처리</p>
+          <p>트랜잭션 한도(Limit) 설정이 일반 카드와 다름</p>
+        `
+      },
+      {
+        title: "Balance Reading",
+        body: `
+          <p>오프라인 잔액을 가진 카드에서 잔액 조회 기능</p>
+          <p class="section-title">두 가지 시점:</p>
+          <ul class="bullets tight">
+            <li>Pre-gen AC: GENERATE AC 커맨드 이전에 잔액 읽기</li>
+            <li>Post-gen AC: GENERATE AC 커맨드 이후에 잔액 읽기</li>
+          </ul>
+          <p>두 시점 모두 읽기 가능</p>
+          <p>결과 → Terminal 전달 → 디스플레이/영수증에 표시</p>
+          <p>TLV DB의 Balance Read Before/After Gen AC 데이터 오브젝트로 제어</p>
+        `
+      },
+      {
+        title: "Relay Resistance Protocol (RRP)",
+        body: `
+          <p>릴레이 공격: 카드와 단말기 사이에 중간 기기를 삽입해 원거리 결제 시도</p>
+          <p class="section-title">RRP 대응 메커니즘:</p>
+          <ol class="ordered tight">
+            <li>Kernel이 EXCHANGE RELAY RESISTANCE DATA 커맨드 전송</li>
+            <li>카드가 응답 → 왕복 시간 측정 (Measured Relay Resistance Processing Time)</li>
+            <li>측정 시간이 카드가 제시한 허용 시간 범위와 Reader Grace Period를 벗어나면 재시도를 수행할 수 있다.</li>
+            <li>최종적으로 TVR과 Terminal Action Code 정책에 따라 온라인 요청 또는 거절 여부를 결정</li>
+          </ol>
+          <p>관련 데이터: Device Estimated Transmission Time, Device Relay Resistance Entropy</p>
+          <p>카드의 AIP 지원 비트와 Reader의 Kernel Configuration이 모두 RRP를 지원할 때 실행</p>
+        `
+      },
+      {
+        title: "TLV 데이터베이스 개요",
+        body: `
+          <p>TLV (Tag-Length-Value) 구조: EMV 데이터 오브젝트의 기본 인코딩</p>
+          <p class="section-title">Kernel Database 데이터 출처와 접근 권한:</p>
+          <ul class="bullets tight">
+            <li>Terminal Configuration Data: Kernel 시작 전 설정되는 구성 데이터</li>
+            <li>Terminal Transaction Data : ACT / DET Signal로 전달되는 거래 데이터</li>
+            <li>Card Data : RA Signal로 카드에서 전달되는 데이터</li>
+            <li>Kernel Internal Data : Kernel 처리 중 생성·갱신되는 데이터</li>
+          </ul>
+          <p class="section-title">접근 조건</p>
+          <p>- ACT / DET : Terminal이 갱신</p>
+          <p>- RA : Card가 갱신</p>
+          <p>- K : Kernel은 모든 데이터 오브젝트를 갱신 가능</p>
+        `
+      },
+      {
+        title: "DOL (Data Object List) 처리",
+        body: `
+          <p>DOL: 특정 커맨드에 포함될 데이터 오브젝트의 태그와 길이 목록</p>
+          <p class="section-title">주요 DOL:</p>
+          <ul class="bullets tight">
+            <li>PDOL (Processing Options Data Object List): GPO 커맨드 데이터 구성</li>
+            <li>CDOL1/2 (Card Risk Management DOL): GENERATE AC 커맨드 데이터 구성</li>
+            <li>DSDOL (Data Storage DOL): IDS 데이터 포함 구조</li>
+            <li>DRDOL (Device Relay Resistance DOL): RRP 데이터 구성</li>
+          </ul>
+          <p>없는 태그는 0으로 패딩</p>
+        `
+      },
+      {
+        title: "OUT 출력 데이터 구조",
+        body: `
+          <p>Kernel이 최종적으로 Terminal에 전달하는 OUT Signal 구성:</p>
+          <ol class="ordered tight">
+            <li>Outcome Parameter Set : 거래 결과와 다음 동작 지시</li>
+            <li>User Interface Request Data : 화면 메시지, 상태, 금액 또는 잔액 표시 정보</li>
+            <li>Data Record : 승인·온라인 처리에 필요한 카드 데이터</li>
+            <li>Discretionary Data : Kernel 부가 정보, IDS/RRP 상태 등</li>
+          </ol>
+        `
+      },
+      {
+        title: "주요 데이터 오브젝트 (1): 결제 핵심",
+        body: `
+          <div class="table-wrap">
+            <table class="table-med table-center">
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>태그</th>
+                  <th>설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Application PAN</td><td>5A</td><td>카드 번호</td></tr>
+                <tr><td>ATC</td><td>9F36</td><td>트랜잭션 카운터</td></tr>
+                <tr><td>Application Cryptogram</td><td>9F26</td><td>TC/ARQC/AAC 암호문</td></tr>
+                <tr><td>Cryptogram Info Data</td><td>9F27</td><td>AC 유형 및 CDA 여부</td></tr>
+                <tr><td>AIP</td><td>82</td><td>카드 기능 지원 비트맵</td></tr>
+                <tr><td>AFL</td><td>94</td><td>레코드 위치 정보</td></tr>
+                <tr><td>CDOL1</td><td>8C</td><td>Generate AC 입력 DOL</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+      {
+        title: "주요 데이터 오브젝트 (2): 보안 및 설정",
+        body: `
+          <div class="table-wrap">
+            <table class="table-med table-center">
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>태그</th>
+                  <th>설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>Kernel Configuration</td><td>DF811B</td><td>기능 활성화 비트맵</td></tr>
+                <tr><td>Terminal Verification Results</td><td>95</td><td>위험 분석 결과 비트맵</td></tr>
+                <tr><td>Issuer Action Code (D/O/Default)</td><td>9F0E/F/D</td><td>발급사 위험 정책</td></tr>
+                <tr><td>CA Public Key Index</td><td>8F</td><td>CA 공개키 식별자</td></tr>
+                <tr><td>ICC Public Key Certificate</td><td>9F46</td><td>카드 공개키 인증서</td></tr>
+                <tr><td>Unpredictable Number</td><td>9F37</td><td>랜덤 번호 (리플레이 방지)</td></tr>
+                <tr><td>CVM List</td><td>8E</td><td>CVM 우선순위 목록</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+      {
+        title: "C-APDU 개요",
+        body: `
+          <p>APDU (Application Protocol Data Unit): 카드-리더 간 통신 프로토콜 단위</p>
+          <p class="subhead">사용하는 8개 커맨드:</p>
+          <ol class="ordered tight">
+            <li>GET PROCESSING OPTIONS (GPO)</li>
+            <li>READ RECORD</li>
+            <li>GET DATA</li>
+            <li>PUT DATA</li>
+            <li>GENERATE AC</li>
+            <li>RECOVER AC</li>
+            <li>COMPUTE CRYPTOGRAPHIC CHECKSUM (CCC)</li>
+            <li>EXCHANGE RELAY RESISTANCE DATA</li>
+          </ol>
+          <p class="tiny">성공 Status Word: 9000</p>
+          <p class="tiny">오류 Status Word는 명령어별로 다르며, 공통 오류 예시는 6D00, 6E00, 6F00이다.</p>
+        `
+      },
+      {
+        title: "GET PROCESSING OPTIONS (GPO)",
+        body: `
+          <p><strong>목적:</strong> 카드 Application의 처리 옵션 조회, 트랜잭션 시작</p>
+          <p><strong>입력:</strong> PDOL에 정의된 Terminal 데이터 (금액, 날짜, UN 등)</p>
+          <p><strong>응답 Format 1 (태그 '80'):</strong> AIP + AFL (연속 바이트)</p>
+          <p><strong>응답 Format 2 (태그 '77'):</strong> TLV로 인코딩된 AIP, AFL 등</p>
+          <p> AIP는 카드가 지원하는 거래 기능을 나타내며, Kernel에서는 EMV/Mag-stripe Mode, CDA, RRP, Mobile 지원 여부 등 거래 분기에 사용된다.</p>
+        `
+      },
+      {
+        title: "GENERATE AC 및 RECOVER AC",
+        body: `
+          <div class="two-col dense">
+            <div>
+              <p class="section-title">GENERATE AC:</p>
+              <p>핵심 커맨드 — 카드가 암호문(AC) 생성</p>
+              <ul class="bullets tight">
+                <li>Reference Control Parameter: TC / ARQC / AAC 요청</li>
+                <li>입력: 카드가 CDOL1에 정의한 데이터</li>
+                <li>응답: AC(암호문), ATC, CID (CDA 포함 시 서명 데이터 추가)</li>
+                <li>CDA 응답 시: ICC Dynamic Number, Signed Dynamic Application Data 포함</li>
+              </ul>
+            </div>
+            <div>
+              <p class="section-title">RECOVER AC:</p>
+              <p>Torn Transaction 시 이전 AC 복구</p>
+              <ul class="bullets tight">
+                <li>GENERATE AC가 카드에서 처리되었는지 확인하고, 처리 결과를 복구하기 위한 명령</li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "EXCHANGE RELAY RESISTANCE DATA",
+        body: `
+          <p><strong>COMPUTE CRYPTOGRAPHIC CHECKSUM (CCC):</strong> Mag-stripe Mode 전용</p>
+          <ul class="bullets tight">
+            <li>UDOL (Unpredictable Number DOL) 기반 입력</li>
+            <li>카드가 CVC3 (CRC-like 체크값) 생성 → Track 1/2 Equivalent Data에 포함</li>
+            <li>Mag-stripe Mode에서 Track Data에 삽입되는 동적 검증 값이며, 이후 온라인 승인 요청에 사용된다.</li>
+          </ul>
+          <p><strong>EXCHANGE RELAY RESISTANCE DATA:</strong></p>
+          <ul class="bullets tight">
+            <li>입력: Terminal Relay Resistance Entropy, Reader의 Grace Period 및 RRP 관련 설정 값</li>
+            <li>응답: Device Relay Resistance Entropy, Min/Max Processing Time, Device Estimated Transmission Time</li>
+            <li>Kernel이 왕복 시간 측정하여 릴레이 여부 판단</li>
+          </ul>
+        `
+      },
+      {
+        title: "READ RECORD / GET DATA / PUT DATA",
+        body: `
+          <p><strong>READ RECORD:</strong> AFL에 따라 카드 레코드 읽기</p>
+          <ul class="bullets tight">
+            <li>P2로 SFI (Short File Identifier) + Record Number 지정</li>
+            <li>응답: 레코드 데이터 (TLV 형식)</li>
+          </ul>
+          <p><strong>GET DATA:</strong> 특정 데이터 오브젝트 개별 조회</p>
+          <ul class="bullets tight">
+            <li>ATC, Last Online ATC Register, Log Format, DS 관련 데이터 등</li>
+            <li>P1||P2로 태그 지정</li>
+          </ul>
+          <p><strong>PUT DATA:</strong> IDS 슬롯 데이터 또는 Merchant Custom Data 쓰기</p>
+          <ul class="bullets tight">
+            <li>DS ODS Term 등 IDS 관련 데이터 전송에 활용</li>
+          </ul>
+        `
+      },
+      {
+        title: "상태 머신 전체 흐름도",
+        body: `
+          <p>커널의 전체 State 흐름 (간략화된 다이어그램):</p>
+          <div class="state-flow mono">
+Kernel Started → State 1 (Idle)
+EMV Mode 경로: S1 → S2 → S3 → [R1] → S4 → S5 → S6 → S9 → [S10] → S11 → [S12/15]
+Mag-stripe Mode 경로: S1 → S7 → S8 → S13 → S14
+Balance 서브 플로우: S16 (Pre-gen AC), S17 (Post-gen AC)
+각 State는 특정 카드 응답을 기다리는 상태
+특수 상태: S10 (Recover AC), S12 (Put Data Before GAC), S15 (Put Data After GAC)
+          </div>
+        `
+      },
+      {
+        title: "Kernel Started / State 1 (Idle)",
+        body: `
+          <p><strong>Kernel Started :</strong> ACT Signal 수신 후 초기화</p>
+          <ul class="bullets tight">
+            <li>거래 시작 시 Reset-at-ACT 대상 데이터와 거래용 작업 데이터를 초기화하고, AID별 구성 데이터와 Persistent Data를 사용한다.</li>
+            <li>Configuration 데이터 로드</li>
+            <li>Process P에 GPO 커맨드 전송 요청 전 SELECT 완료 확인</li>
+          </ul>
+          <p><strong>State 1 (Idle) :</strong> State 1은 ACT에 포함된 Application Selection 결과와 FCI를 처리하고, PDOL 데이터 필요 여부를 판단</p>
+          <ul class="bullets tight">
+            <li>FCI 파싱: DF Name, Application Label, PDOL, Application Capabilities Information 등</li>
+            <li>PDOL 없으면 빈 데이터로 GPO 전송</li>
+            <li>PDOL 있으면 State 2 (Waiting for PDOL Data) 이동 → DEK Signal로 Terminal에 요청</li>
+          </ul>
+        `
+      },
+      {
+        title: "State 2~3: GPO 처리",
+        body: `
+          <p><strong>State 2 (Waiting for PDOL Data):</strong> DET Signal로 PDOL 데이터 수신</p>
+          <ul class="bullets tight">
+            <li>Terminal으로부터 금액, 날짜, 통화 코드 등 수신</li>
+            <li>GPO 커맨드 구성 → Process P에 전달</li>
+          </ul>
+          <p><strong>State 3 (Waiting for GPO Response):</strong> GPO 응답 처리</p>
+          <ul class="bullets tight">
+            <li>AIP, AFL 파싱</li>
+            <li>EMV Mode / Mag-stripe Mode 분기</li>
+            <li>RRP는 카드 AIP와 Reader Kernel Configuration이 모두 지원할 때 State R1로 이동</li>
+            <li>미지원 시 READ RECORD 시작 (State 4)</li>
+          </ul>
+        `
+      },
+      {
+        title: "State 9~11: Generate AC 처리",
+        body: `
+          <p><strong>State 9 (Waiting for GAC Response-1):</strong> 1차 GENERATE AC 응답</p>
+          <ul class="bullets tight">
+            <li>CID에서 AC 유형 확인 (TC/ARQC/AAC)</li>
+            <li>ARQC: 온라인 승인 요청 → OUT Signal (online)</li>
+            <li>TC: 카드가 오프라인 승인 Cryptogram을 반환, Kernel은 거래 조건과 처리 결과를 반영해 Outcome을 생성</li>
+            <li>AAC: 거절 → OUT Signal (declined)</li>
+            <li>CDA가 요청되고 카드 응답에 CDA 데이터가 포함된 경우 CDA 검증 수행</li>
+          </ul>
+          <p><strong>State 10 (Waiting for Recover AC Response):</strong> Torn 복구 후 AC</p>
+          <p><strong>State 11 (Waiting for GAC Response-2):</strong> 온라인 응답 후 2차 GAC</p>
+          <ul class="bullets tight">
+            <li>온라인 응답 데이터를 반영한 뒤, 거래 조건에 따라 두 번째 GENERATE AC에서 TC 또는 AAC를 요청</li>
+          </ul>
+        `
+      },
+      {
+        title: "CVM Selection & Terminal Action Analysis",
+        body: `
+          <div class="two-col dense">
+            <div>
+              <p class="section-title">CVM Selection 절차:</p>
+              <ul class="bullets tight">
+                <li>CVM List 순서대로 시도</li>
+                <li>지원 가능한 CVM 선택 (Signature, Online PIN, No CVM, CDCVM 등)</li>
+                <li>금액 기준 (Reader CVM Required Limit) 이하: No CVM 가능</li>
+                <li>Mobile 기기: CDCVM (Consumer Device CVM) 적용</li>
+              </ul>
+            </div>
+            <div>
+              <p class="section-title">Terminal Action Analysis:</p>
+              <ul class="bullets tight">
+                <li>TVR + IAC/TAC (Denial, Online, Default) AND 연산</li>
+                <li>결과: TC (승인), ARQC (온라인 요청), AAC (거절)</li>
+                <li>Online-only 단말: ARQC 강제</li>
+                <li>Offline-only 단말: TC 또는 AAC</li>
+              </ul>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Unpredictable Number",
+        body: `
+          <p><strong>요구사항:</strong></p>
+          <ul class="bullets tight">
+            <li>예측 불가능한 4바이트 Unpredictable Number를 거래마다 생성</li>
+            <li>구현은 CSPRNG 또는 적절한 하드웨어 엔트로피 소스를 사용</li>
+          </ul>
+          <p><strong>활용:</strong> 4바이트 Unpredictable Number (리플레이 공격 방지)</p>
+        `
+      },
+      {
+        title: "핵심 요약",
+        body: `
+          <p class="subhead">주요 특징 5가지:</p>
+          <ol class="summary-list">
+            <li>EMV Mode + Mag-stripe Mode 이중 지원</li>
+            <li>DEK/DET 기반 Terminal과의 동적 데이터 교환</li>
+            <li>IDS/TORN 옵션 적용 시 카드 내 데이터 저장·갱신과 Torn Transaction Recovery 지원</li>
+            <li>Relay Resistance Protocol로 응답 지연 기반 릴레이 공격 탐지 및 위험 평가</li>
+            <li>상태 머신 기반의 엄격한 트랜잭션 흐름 제어</li>
+          </ol>
+          <p>구현 선택지: MAG와 IDS/TORN 두 Implementation Option의 적용 여부에 따라 4가지 조합 가능</p>
+        `
+      }
+    ];
+
+    function renderSlide(slide, index) {
+      if (slide.type === "hero") {
+        return `
+          <section class="slide hero-slide" data-index="${index}">
+            <div class="top-line"></div>
+            ${slide.body}
+          </section>
+        `;
+      }
+      return `
+        <section class="slide standard" data-index="${index}">
+          <div class="top-line"></div>
+          <h1 class="title">${slide.title}</h1>
+          <div class="content ${slide.tight ? "tight" : ""} ${slide.dense ? "dense" : ""}">
+            ${slide.body}
+          </div>
+        </section>
+      `;
+    }
+
+    const deck = document.getElementById("deck");
+    deck.innerHTML = `
+      <div class="viewer">
+        <button class="nav-btn prev" id="prevBtn" aria-label="Previous slide">‹</button>
+        <div class="stage" id="stage">
+          ${slides.map(renderSlide).join("")}
+        </div>
+        <button class="nav-btn next" id="nextBtn" aria-label="Next slide">›</button>
+      </div>
+      <div class="hud" aria-hidden="true">
+        <div class="counter" id="counter"></div>
+        <div class="dots" id="dots"></div>
+      </div>
+    `;
+
+    const slideEls = Array.from(document.querySelectorAll(".slide"));
+    const dotsEl = document.getElementById("dots");
+    const counterEl = document.getElementById("counter");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    let currentIndex = 0;
+
+    function sync() {
+      slideEls.forEach((el, i) => el.classList.toggle("active", i === currentIndex));
+      Array.from(dotsEl.children).forEach((dot, i) => dot.classList.toggle("active", i === currentIndex));
+      counterEl.textContent = `${currentIndex + 1} / ${slides.length}`;
+    }
+
+    function goTo(index) {
+      currentIndex = (index + slides.length) % slides.length;
+      sync();
+    }
+
+    prevBtn.addEventListener("click", () => goTo(currentIndex - 1));
+    nextBtn.addEventListener("click", () => goTo(currentIndex + 1));
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goTo(currentIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goTo(currentIndex + 1);
+      }
+    });
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "dot";
+      dot.setAttribute("aria-label", `Go to slide ${i + 1}`);
+      dot.addEventListener("click", () => goTo(i));
+      dotsEl.appendChild(dot);
+    });
+
+    sync();
+  </script>
+</body>
+</html>
